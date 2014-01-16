@@ -1,7 +1,7 @@
 <?php namespace components\webhistory; if(!defined('TX')) die('No direct access.');
 
 //Make sure we have the things we need for this class.
-tx('Component')->check('update');
+mk('Component')->check('update');
 
 class DBUpdates extends \components\update\classes\BaseDBUpdates
 {
@@ -9,9 +9,21 @@ class DBUpdates extends \components\update\classes\BaseDBUpdates
   protected
     $component = 'webhistory',
     $updates = array(
-      '0.1' => '0.2'
+      '0.1' => '0.2',
+      '0.2' => '0.3'
     );
-
+  
+  //Update to v0.3
+  public function update_to_0_3($dummydata, $forced)
+  {
+    
+    mk('Sql')->query('
+      ALTER TABLE `#__webhistory__tags`
+        ADD COLUMN `color` VARCHAR(50) NULL DEFAULT NULL AFTER `title`;  
+    ');
+    
+  }
+  
   //Update to v0.2.
   public function update_to_0_2($dummydata, $forced)
   {
@@ -22,7 +34,7 @@ class DBUpdates extends \components\update\classes\BaseDBUpdates
       'min_version' => '3.0'
       ), function($version){
         
-        tx('Component')->helpers('cms')->_call('ensure_pagetypes', array(
+        mk('Component')->helpers('cms')->_call('ensure_pagetypes', array(
           array(
             'name' => 'webhistory',
             'title' => 'Webistor'
@@ -42,13 +54,13 @@ class DBUpdates extends \components\update\classes\BaseDBUpdates
   {
 
     if($forced === true){
-      tx('Sql')->query('DROP TABLE IF EXISTS `#__webhistory__entries`');
-      tx('Sql')->query('DROP TABLE IF EXISTS `#__webhistory__entries_to_tags`');
-      tx('Sql')->query('DROP TABLE IF EXISTS `#__webhistory__friends`');
-      tx('Sql')->query('DROP TABLE IF EXISTS `#__webhistory__tags`');
+      mk('Sql')->query('DROP TABLE IF EXISTS `#__webhistory__entries`');
+      mk('Sql')->query('DROP TABLE IF EXISTS `#__webhistory__entries_to_tags`');
+      mk('Sql')->query('DROP TABLE IF EXISTS `#__webhistory__friends`');
+      mk('Sql')->query('DROP TABLE IF EXISTS `#__webhistory__tags`');
     }
     
-    tx('Sql')->query('
+    mk('Sql')->query('
       CREATE TABLE IF NOT EXISTS `#__webhistory__entries` (
         `id` int(10) NOT NULL AUTO_INCREMENT,
         `user_id` int(10) DEFAULT \'0\',
@@ -65,7 +77,7 @@ class DBUpdates extends \components\update\classes\BaseDBUpdates
         PRIMARY KEY (`id`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8
     ');
-    tx('Sql')->query('
+    mk('Sql')->query('
       CREATE TABLE IF NOT EXISTS `#__webhistory__entries_to_tags` (
         `entry_id` int(10) unsigned DEFAULT NULL,
         `tag_id` int(10) unsigned DEFAULT NULL,
@@ -73,14 +85,14 @@ class DBUpdates extends \components\update\classes\BaseDBUpdates
         PRIMARY KEY (`entry_id`, `tag_id`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8
     ');
-    tx('Sql')->query('
+    mk('Sql')->query('
       CREATE TABLE IF NOT EXISTS `#__webhistory__friends` (
         `user_id` int(10) unsigned NOT NULL,
         `friend_id` int(10) unsigned NOT NULL,
         PRIMARY KEY (`user_id`, `friend_id`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8
     ');
-    tx('Sql')->query('
+    mk('Sql')->query('
       CREATE TABLE IF NOT EXISTS `#__webhistory__tags` (
         `id` int(10) NOT NULL AUTO_INCREMENT,
         `title` varchar(50) DEFAULT NULL,

@@ -5,6 +5,11 @@
   "dbUpdates": true,
   "versions": [
    {
+      "version": "0.3",
+      "date": "2014-01-16",
+      "description": "Tag colors can now be stored in the database."
+   },
+   {
       "version": "0.2",
       "date": "2014-01-13",
       "description": "Added backend view: admin_stats."

@@ -1,5 +1,7 @@
 <?php namespace components\webhistory; if(!defined('TX')) die('No direct access.');
 
+use \exception\NotFound as NotFoundException;
+
 class Json extends \dependencies\BaseComponent
 {
   
@@ -217,6 +219,7 @@ class Json extends \dependencies\BaseComponent
 
         ->join('Tags', $tag)
         ->select("$tag.title", 'title')
+        ->select("$tag.color", 'color')
         
         //Search functionality.
         ->is($options->search->is('set')->and_not('empty'), function($q)use($options){
@@ -245,6 +248,35 @@ class Json extends \dependencies\BaseComponent
         ->limit(75)
 
         ->execute();
+      
+    }
+    
+  }
+  
+  public function put_tags($data, $routes, $options)
+  {
+    
+    //Update a single tag?
+    if($routes->{0}->is_set())
+    {
+      
+      //Get the tag from the database.
+      $tag = $this->table('Tags')
+      ->pk($data->tag_id)
+      ->join('Entries', $E)
+      ->where("$E.user_id", mk('Account')->user->id)
+      ->execute_single();
+      
+      //The tag must exist under the logged in user.
+      if($tag->is_empty()){
+        throw new NotFoundException('You do not own a tag with ID %s', $data->tag_id);
+      }
+      
+      //Change attributes and save.
+      $tag->merge($data)->save();
+      
+      //Return the tag.
+      return $tag;
       
     }
     

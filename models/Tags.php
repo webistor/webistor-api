@@ -8,7 +8,8 @@ class Tags extends \dependencies\BaseModel
     $table_name = 'webhistory__tags',
 
     $relations = array(
-      'TagLink'=>array('id' => 'TagLink.tag_id')
+      'TagLink'=>array('id' => 'TagLink.tag_id'),
+      'Entries'=>array('id' => 'TagLink.tag_id')
     );
 
 }
