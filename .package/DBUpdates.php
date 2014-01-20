@@ -10,8 +10,97 @@ class DBUpdates extends \components\update\classes\BaseDBUpdates
     $component = 'webhistory',
     $updates = array(
       '0.1' => '0.2',
-      '0.2' => '0.3'
+      '0.2' => '0.3',
+      '0.3' => '0.4'
     );
+  
+  //Update to v0.4
+  public function update_to_0_4($dummydata, $forced)
+  {
+
+    $debug = false;
+
+    // Add `user_id` column to `tags` table.
+    mk('Sql')->query('
+      ALTER TABLE `#__webhistory__tags`
+        ADD COLUMN `user_id` INT(10) NOT NULL AFTER `id`;
+    ');
+
+    //Set user id for entries that existed
+    // before this table modification.
+    if($debug) echo "<h1>Tags:</h1>";
+
+    tx('Sql')
+      ->table('webhistory', 'Tags')
+      ->where('user_id', 0)
+      ->execute()
+
+      //Loop tags without a value for `user_id`.
+      ->each(function($tag){
+
+        if($debug) echo "<h2>Tag: {$tag->title}</h2>";
+        if($debug) trace($tag->dump());
+
+        //Get the users who are using this tag.
+        tx('Sql')
+          ->table('webhistory', 'TagLink')
+          ->join('Entries', $entry)
+          ->select("$entry.user_id", 'user_id')
+          ->where('tag_id', $tag->id->get())
+          ->where("$entry.user_id", '!', 'NULL')
+          ->group("$entry.user_id")
+          ->execute()
+
+          //Loop all users who use this tag
+          // and link them to the [existing|new] tag.
+          ->each(function($user_who_uses_this_tag)use(&$tag){
+
+            if($debug) echo "<h3>User who uses this tag: {$user_who_uses_this_tag->user_id}</h3>";
+            if($debug) trace($user_who_uses_this_tag->dump());
+
+            //If the existing tag isn't linked to a user yet.
+            if($tag->user_id->get() == 0){
+              
+              //Link this tag to the user.
+              $tag->user_id->set($user_who_uses_this_tag->user_id->get());
+              $tag->save();
+
+            }
+
+            //Or else: add a new tag for this user.
+            else{
+
+              //Create new tag.
+              $new_tag = tx('Sql')
+                ->model('webhistory', 'Tags')
+                ->set(array(
+                  'user_id' => $user_who_uses_this_tag->user_id->get(),
+                  'title' => $tag->title
+                ))
+                ->save();
+
+              //Select all old TagLink entries from this user.
+              tx('Sql')
+                ->table('webhistory', 'TagLink')
+                ->join('Entries', $entry)
+                ->where("$entry.user_id", "'".$user_who_uses_this_tag->user_id->get()."'")
+                ->where('tag_id', "'".$tag->id->get()."'")
+                ->execute()
+                ->each(function($link)use($new_tag){
+
+                  //And relink the user to this new tag.
+                  $link->merge(array('tag_id', $new_tag->id->get()));
+                  $link->save();
+
+                });
+
+            }
+
+          });
+
+      });
+      
+  }
   
   //Update to v0.3
   public function update_to_0_3($dummydata, $forced)
