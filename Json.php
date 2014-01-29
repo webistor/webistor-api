@@ -254,8 +254,9 @@ class Json extends \dependencies\BaseComponent
         })
         
         ->group('tag_id')
+        ->order('color', 'DESC')
         ->order('num', 'DESC')
-        ->limit(75)
+        ->limit(125)
 
         ->execute();
       
