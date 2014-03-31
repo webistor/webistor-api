@@ -1,0 +1,26 @@
+{
+  "name": "webistor-api",
+  "version": "0.4",
+  "description": "Webistor server API",
+  "main": "lib/initialize.js",
+  "scripts": {
+    "start": "nodemon -w lib/",
+    "test": "cake test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Tuxion/webistor-api.git"
+  },
+  "author": "Avaq <aldwin.vlasblom@gmail.com>",
+  "license": "ISC",
+  "private": true,
+  "dependencies": {
+    "express": "~3",
+    "mongoose": "~3",
+    "lodash": "~2",
+    "node-restful": "*",
+    "node-logging": "*",
+    "bluebird": "~1"
+  },
+  "devDependencies": {}
+}
