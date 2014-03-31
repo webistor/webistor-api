@@ -11,7 +11,8 @@ class Sections extends \dependencies\BaseViews
       'entry_edit' => 0,
       'entry_edit' => 0,
       'ejs_list_entry' => 0,
-      'ejs_full_entry' => 0
+      'ejs_full_entry' => 0,
+      'admin_stats__new_users_chart' => 2
     );
 
   protected function intro(){
@@ -27,7 +28,7 @@ class Sections extends \dependencies\BaseViews
 
   protected function ejs_list_entry(){}
   protected function ejs_full_entry(){}
- 
+
   protected function summary()
   {
 
@@ -41,5 +42,26 @@ class Sections extends \dependencies\BaseViews
 
   }
 
-}
+  // Stats: toon aantal nieuwe gebruikers per maand
+  protected function admin_stats__new_users_chart()
+  {
 
+    $ret = array();
+
+    $this
+      ->table('Accounts')
+      ->select('COUNT(*)', 'num')
+      ->select('MONTH(`dt_created`)', 'month')
+      ->order('dt_created', 'ASC')
+      ->group('MONTH(dt_created)')
+      ->limit(8)
+      ->execute()
+      ->each(function($row)use(&$ret){
+        $ret[] = $row->num;
+      });
+
+    return $ret;
+
+  }
+
+}

@@ -7,26 +7,35 @@ class Views extends \dependencies\BaseViews
     $permissions = array(
       'app' => 0,
       'entries' => 1,
-      'email_template' => 0
+      'email_template' => 0,
+      'email_user_invited' => 0
     );
 
   protected function admin_stats($options)
   {
 
-    return $this
+    return array(
 
-      ->table('Entries')
-      ->select('COUNT(*)', 'num_entries')
+      'accounts_by_login_date' => $this
 
-      ->join('Accounts', $account)
-      ->select("$account.email", 'email')
+        ->table('Entries')
+        ->select('COUNT(*)', 'num_entries')
 
-      ->group('user_id')
-      ->order('num_entries', 'DESC')
+        ->join('Accounts', $account)
+        ->select("$account.email", 'email')
 
-      ->execute()
+        ->where("$account.id", '!', 'NULL')
 
-    ;
+        ->group('user_id')
+        ->order('num_entries', 'DESC')
+
+        ->execute(),
+
+      'new_users' => $this
+
+        ->section('admin_stats__new_users_chart')
+
+    );
 
   }
 
@@ -56,6 +65,10 @@ class Views extends \dependencies\BaseViews
   }
   
   protected function email_template($options){
+    return $options;
+  }
+
+  protected function email_user_invited($options){
     return $options;
   }
 
