@@ -1,7 +1,7 @@
 {mongoose, model} = require 'node-restful'
 {Schema} = mongoose
 {ObjectId} = Schema.Types
-Auth = require './classes/Auth'
+Auth = require './classes/auth'
 config = require './config'
 
 # Connect to the database.
@@ -53,14 +53,6 @@ schemas =
 
 # Add user password hashing.
 schemas.User.pre 'save', Auth.Middleware.hashPassword()
-
-
-##
-## METHODS
-##
-
-# Add user password matching.
-schemas.User.methods.matchPassword = (password) -> Auth.matchPassword password, @password
 
 
 ##
