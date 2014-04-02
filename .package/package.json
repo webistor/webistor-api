@@ -5,6 +5,11 @@
   "dbUpdates": true,
   "versions": [
    {
+      "version": "0.4",
+      "date": "2014-01-20",
+      "description": "Tags are now stored per user."
+   },
+   {
       "version": "0.3",
       "date": "2014-01-16",
       "description": "Tag colors can now be stored in the database."

@@ -86,17 +86,22 @@ class Json extends \dependencies\BaseComponent
       if(empty($tag)) continue;
       
       //Check if tag exists in database.
-      mk('Sql')->table('webhistory', 'Tags')->where('title', mk('Sql')->escape($tag))->execute_single()->is('empty')
+      mk('Sql')
+        ->table('webhistory', 'Tags')
+        ->where('user_id', $user_id)
+        ->where('title', mk('Sql')->escape($tag))
+        ->execute_single()
+        ->is('empty')
         
-        //If not: insert tag.
-        ->success(function()use($tag, &$tag_id){
-          $tag_id = tx('Sql')->model('webhistory', 'Tags')->set(array('title' => $tag))->save()->id;
-        })
-        
-        //If tag exists: get tag_id.
-        ->failure(function($r)use(&$tag_id){
-          $tag_id = $r->id;
-        });
+          //If not: insert tag.
+          ->success(function()use($user_id, $tag, &$tag_id){
+            $tag_id = tx('Sql')->model('webhistory', 'Tags')->set(array('user_id' => $user_id, 'title' => $tag))->save()->id;
+          })
+          
+          //If tag exists: get tag_id.
+          ->failure(function($r)use(&$tag_id){
+            $tag_id = $r->id;
+          });
       
       //Now save the tag-link.
       mk('Sql')->model('webhistory', 'TagLink')->merge(array('entry_id'=>$model->id, 'tag_id'=>$tag_id, 'sort'=>$sort))->save();
@@ -144,17 +149,22 @@ class Json extends \dependencies\BaseComponent
       if(empty($tag)) continue;
       
       //Check if tag exists in database.
-      mk('Sql')->table('webhistory', 'Tags')->where('title', mk('Sql')->escape($tag))->execute_single()->is('empty')
+      mk('Sql')
+        ->table('webhistory', 'Tags')
+        ->where('user_id', $user_id)
+        ->where('title', mk('Sql')->escape($tag))
+        ->execute_single()
+        ->is('empty')
         
-        //If not: insert tag.
-        ->success(function()use($tag, &$tag_id){
-          $tag_id = tx('Sql')->model('webhistory', 'Tags')->set(array('title' => $tag))->save()->id;
-        })
-        
-        //If tag exists: get tag_id.
-        ->failure(function($r)use(&$tag_id){
-          $tag_id = $r->id;
-        });
+          //If not: insert tag.
+          ->success(function()use($user_id, $tag, &$tag_id){
+            $tag_id = tx('Sql')->model('webhistory', 'Tags')->set(array('user_id' => $user_id, 'title' => $tag))->save()->id;
+          })
+          
+          //If tag exists: get tag_id.
+          ->failure(function($r)use(&$tag_id){
+            $tag_id = $r->id;
+          });
       
       //Now save the tag-link.
       mk('Sql')->model('webhistory', 'TagLink')->merge(array('entry_id'=>$model->id, 'tag_id'=>$tag_id, 'sort'=>$sort))->save();
@@ -244,8 +254,9 @@ class Json extends \dependencies\BaseComponent
         })
         
         ->group('tag_id')
+        ->order('color', 'DESC')
         ->order('num', 'DESC')
-        ->limit(75)
+        ->limit(125)
 
         ->execute();
       
@@ -262,10 +273,9 @@ class Json extends \dependencies\BaseComponent
       
       //Get the tag from the database.
       $tag = $this->table('Tags')
-      ->pk($data->tag_id)
-      ->join('Entries', $E)
-      ->where("$E.user_id", mk('Account')->user->id)
-      ->execute_single();
+        ->pk($data->tag_id)
+        ->where('user_id', mk('Account')->user->id)
+        ->execute_single();
       
       //The tag must exist under the logged in user.
       if($tag->is_empty()){
