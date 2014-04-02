@@ -1,15 +1,15 @@
 {User} = require '/schemas'
-Auth = require './auth'
 
 module.exports = class AuthFactory
   
   # Class properties.
   instances: null
+  Auth: require './auth'
   
   ###*
    * Instantiate the factory.
   ###
-  constructor: ->
+  constructor: (@Auth=@Auth) ->
     @instances = {}
   
   ###*
@@ -36,4 +36,4 @@ module.exports = class AuthFactory
   ###
   create: (user, onExpire) ->
     throw new Error "First argument must be an instance of User." unless user instanceof User
-    new Auth user, onExpire
+    new @Auth user, onExpire
