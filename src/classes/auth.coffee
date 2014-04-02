@@ -45,7 +45,7 @@ module.exports = class Auth
   }
   
   # Class properties.
-  expiry: -1
+  expireTimeout: -1
   expired: false
   expireCallbacks: null
   attempts: 0
@@ -140,8 +140,8 @@ module.exports = class Auth
   ###
   refresh: ->
     return this if @isLocked() or @isExpired() or @singleUseToken?
-    clearTimeout @expiry if @expiry > -1
-    @expiry = setTimeout @expire.bind(@), Auth.EXPIRATION_DURATION
+    clearTimeout @expireTimeout if @expireTimeout > -1
+    @expireTimeout = setTimeout @expire.bind(@), Auth.EXPIRATION_DURATION
     return this
   
   ###*
