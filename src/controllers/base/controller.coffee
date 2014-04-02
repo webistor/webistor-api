@@ -1,4 +1,5 @@
 Promise = require 'bluebird'
+_ = require 'lodash'
 
 module.exports = class Controller
 
@@ -15,10 +16,10 @@ module.exports = class Controller
   ###
   getMiddleware: (actionName, args...) -> (req, res, next) =>
     action = @getAction actionName
-    return res.send 501, new Error "Controller method not implemented." unless action
+    return res.send 501, error: new Error "Controller method not implemented." unless action
     action req, res, args...
-    .then (data) -> if data? then res.send data else do next
-    .catch (err) -> res.send 500, err
+    .then (data) -> if data? then res.send (if _.isObject data then data else value:data) else do next
+    .catch (err) -> res.send err.statusCode or 500, error: (if err instanceof Error then err.message else err)
 
   ###*
    * Get synchrounous middleware for an action.
@@ -33,11 +34,11 @@ module.exports = class Controller
   ###
   getSyncMiddleware: (actionName, args...) -> (req, res, next) =>
     action = @getAction actionName
-    return res.send 501, new Error "Controller method not implemented." unless action
+    return res.send 501, error: new Error "Controller method not implemented." unless action
     try
       data = action req, res, args...
-      if data? then res.send data else do next
-    catch err then res.send 500, err
+      if data? then res.send (if _.isObject data then data else value:data) else do next
+    catch err then res.send err.statusCode or 500, error: (if err instanceof Error then err.message else err)
 
   ###*
    * Find the implementing controller method of the given name, and bind it to this.

@@ -3,6 +3,8 @@ express = require 'express'
 Promise = require 'bluebird'
 config = require './config'
 log = require 'node-logging'
+AuthFactory = require './classes/auth-factory'
+Session = require './controllers/session'
 
 ##
 ## SHARED
@@ -52,20 +54,28 @@ server.use (req, res, next) ->
   next()
 
 # Set up shared middleware.
-server.use favicon
+# server.use favicon
 
 # Parse request body as JSON.
 server.use express.json()
 
+# Set up session support.
+server.use express.cookieParser();
+server.use express.cookieSession secret: config.sessionSecret, cookie: maxAge: 60 * 60 * 1000
+
 # Import database schemas.
 server.db = require './schemas'
+
+# Instantiate controllers.
+server.session = new Session new AuthFactory, server.db.User
 
 # Route: Set up simple database routes.
 # server.db.Entry.methods ['get', 'post', 'put', 'delete']
 
 # Route: Set up authentication related routes.
-# server.post 'auth/user', (req, res, next) -> res.send Auth.createUser req.body
-# server.post 'auth/session', (req, res, next) -> res.send Auth.createSession req.body
+server.get '/users/me', server.session.getMiddleware 'getUser'
+server.post '/users/me', server.session.getMiddleware 'login'
+server.get '/session/has/login', server.session.getSyncMiddleware 'isLoggedIn'
 
 # Start listening on the server port.
 server.listen config.serverPort

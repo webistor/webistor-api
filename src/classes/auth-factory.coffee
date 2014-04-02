@@ -1,4 +1,4 @@
-{User} = require '/schemas'
+{User} = require '../schemas'
 
 module.exports = class AuthFactory
   

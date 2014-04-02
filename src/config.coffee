@@ -7,3 +7,4 @@ module.exports =
   database: 'mongodb://localhost/webistor'
   logLevel: 'debug'
   whitelist: ['localhost', 'webistor.net']
+  sessionSecret: 'sesamopenu'
