@@ -49,7 +49,7 @@ module.exports = class Auth
   expired: false
   expireCallbacks: null
   attempts: 0
-  singleUseToken: null
+  token: null
   
   ###*
    * Construct an authentication object for the given user.
@@ -87,6 +87,7 @@ module.exports = class Auth
     @attempt()
     return Promise.reject new AuthError "Authentication expired.", AuthError.EXPIRED if @isExpired()
     return Promise.reject new AuthError "Authentication locked.", AuthError.LOCKED if @isLocked()
+    return Promise.reject new AuthError "No authentication token present.", AuthError.MISSING unless @token?
     bcrypt.compare token, @token
     .then (ok) -> throw new AuthError "Non-matching tokens.", AuthError.MISSMATCH unless ok
   
@@ -95,7 +96,7 @@ module.exports = class Auth
    *
    * NOTE:
    *   Because the previous token is removed before the refresh, this method might be used
-   *   to extend the life of this instance by MAX_ALLOWED_ATTEMPTS*EXPRATION_DURATION.
+   *   to extend the life of this instance by MAX_ALLOWED_ATTEMPTS*EXPIRATION_DURATION.
    *   This shouldn't pose a problem to security, because the life since the last
    *   generated token will still always be <= EXPRATION_DURATION.
    *   One problem that might arise is one where bad guys attempt to flood our server
@@ -104,14 +105,14 @@ module.exports = class Auth
    * @return {Promise} A promise of the token to compare against later.
   ###
   generateToken: ->
-    @singleUseToken = null
+    @token = null
     @attempt()
     return Promise.reject new AuthError "Authentication expired.", AuthError.EXPIRED if @isExpired()
     return Promise.reject new AuthError "Authentication locked.", AuthError.LOCKED if @isLocked()
     token = randtoken.generate 32
     bcrypt.genSalt Auth.SALT_WORK_FACTOR
     .then (salt) -> bcrypt.hash token, salt
-    .then (hash) => @singleUseToken = hash
+    .then (hash) => @token = hash
     .return token
   
   ###*
@@ -139,7 +140,7 @@ module.exports = class Auth
    * @chainable
   ###
   refresh: ->
-    return this if @isLocked() or @isExpired() or @singleUseToken?
+    return this if @isLocked() or @isExpired() or @token?
     clearTimeout @expireTimeout if @expireTimeout > -1
     @expireTimeout = setTimeout @expire.bind(@), Auth.EXPIRATION_DURATION
     return this

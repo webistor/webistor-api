@@ -4,6 +4,7 @@ module.exports = class AuthError extends Error
   @EXPIRED: 1
   @MISSMATCH: 2
   @LOCKED: 3
+  @MISSING: 4
   
   reason: 0
   
