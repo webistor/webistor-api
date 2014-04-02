@@ -22,7 +22,7 @@
     "node-logging": "*",
     "bluebird": "~1",
     "bcrypt": "~0.7",
-    "rand-token": "~0.2",
+    "rand-token": "~0.2"
   },
   "devDependencies": {
     "nodeunit": "~0.8"
