@@ -68,3 +68,4 @@ Soon...
 * [Node Restful](https://github.com/baugarten/node-restful): Mongoose exposure to REST helpers.
 * [Node Logging](https://github.com/Monwara/node-logging): Logging library used.
 * [Node bcrypt](https://github.com/ncb000gt/node.bcrypt.js): Hashing and cryptology library used.
+* [Node rand-token](https://github.com/sehrope/node-rand-token): Token generating library.
