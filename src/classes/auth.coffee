@@ -71,8 +71,8 @@ module.exports = class Auth
   ###
   authenticatePassword: (password) ->
     @attempt()
-    return Promise.reject new AuthError "Authentication expired.", AuthError.EXPIRED if @isExpired()
-    return Promise.reject new AuthError "Authentication locked.", AuthError.LOCKED if @isLocked()
+    return Promise.reject new AuthError "Auth instance expired.", AuthError.EXPIRED if @isExpired()
+    return Promise.reject new AuthError "Auth instance locked.", AuthError.LOCKED if @isLocked()
     bcrypt.compare password, @user.password
     .then (ok) -> throw new AuthError "Non-matching passwords.", AuthError.MISSMATCH unless ok
   
@@ -85,11 +85,13 @@ module.exports = class Auth
   ###
   authenticateToken: (token) ->
     @attempt()
-    return Promise.reject new AuthError "Authentication expired.", AuthError.EXPIRED if @isExpired()
-    return Promise.reject new AuthError "Authentication locked.", AuthError.LOCKED if @isLocked()
+    return Promise.reject new AuthError "Auth instance expired.", AuthError.EXPIRED if @isExpired()
+    return Promise.reject new AuthError "Auth instance locked.", AuthError.LOCKED if @isLocked()
     return Promise.reject new AuthError "No authentication token present.", AuthError.MISSING unless @token?
-    bcrypt.compare token, @token
-    .then (ok) -> throw new AuthError "Non-matching tokens.", AuthError.MISSMATCH unless ok
+    Promise.return @token is token
+    .then (ok) =>
+      throw new AuthError "Non-matching tokens.", AuthError.MISSMATCH unless ok
+      @token = null
   
   ###*
    * Generate a single-use authentication token (removing the previous).
@@ -102,18 +104,14 @@ module.exports = class Auth
    *   One problem that might arise is one where bad guys attempt to flood our server
    *   memory by keeping alive a high amount of instances, but that's pretty far-fetched.
    *
-   * @return {Promise} A promise of the token to compare against later.
+   * @return {String} The token to compare against later.
   ###
   generateToken: ->
     @token = null
     @attempt()
-    return Promise.reject new AuthError "Authentication expired.", AuthError.EXPIRED if @isExpired()
-    return Promise.reject new AuthError "Authentication locked.", AuthError.LOCKED if @isLocked()
-    token = randtoken.generate 32
-    bcrypt.genSalt Auth.SALT_WORK_FACTOR
-    .then (salt) -> bcrypt.hash token, salt
-    .then (hash) => @token = hash
-    .return token
+    return Promise.reject new AuthError "Auth instance expired.", AuthError.EXPIRED if @isExpired()
+    return Promise.reject new AuthError "Auth instance locked.", AuthError.LOCKED if @isLocked()
+    @token = randtoken.generate 32
   
   ###*
    * Determine if this authentication session is locked for any reason.
