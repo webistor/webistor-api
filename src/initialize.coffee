@@ -51,6 +51,8 @@ server.use (req, res, next) ->
   if originDomain in config.whitelist
     res.header 'Access-Control-Allow-Origin', req.headers.origin
     res.header 'Access-Control-Allow-Credentials', 'true'
+  if req.method is 'OPTIONS'
+    res.header 'Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE'
   next()
 
 # Set up shared middleware.
@@ -62,6 +64,10 @@ server.use express.json()
 # Set up session support.
 server.use express.cookieParser();
 server.use express.cookieSession secret: config.sessionSecret, cookie: maxAge: 60 * 60 * 1000
+
+# Send OPTIONS response at this point.
+server.use (req, res, next) ->
+  if request.method is 'OPTIONS' then res.send() else next()
 
 # Import database schemas.
 server.db = require './schemas'
@@ -75,7 +81,7 @@ server.session = new Session new AuthFactory, server.db.User
 # Route: Set up authentication related routes.
 server.get '/users/me', server.session.getMiddleware 'getUser'
 server.post '/users/me', server.session.getMiddleware 'login'
-server.get '/session/has/login', server.session.getSyncMiddleware 'isLoggedIn'
+server.get '/session/loginCheck', server.session.getSyncMiddleware 'isLoggedIn'
 
 # Start listening on the server port.
 server.listen config.serverPort
