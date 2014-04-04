@@ -51,8 +51,9 @@ server.use (req, res, next) ->
   if originDomain in config.whitelist
     res.header 'Access-Control-Allow-Origin', req.headers.origin
     res.header 'Access-Control-Allow-Credentials', 'true'
-  if req.method is 'OPTIONS'
-    res.header 'Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE'
+    if req.method is 'OPTIONS'
+      res.header 'Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE'
+      res.header 'Access-Control-Allow-Headers', req.headers['access-control-request-headers']
   next()
 
 # Set up shared middleware.
@@ -67,7 +68,7 @@ server.use express.cookieSession secret: config.sessionSecret, cookie: maxAge: 6
 
 # Send OPTIONS response at this point.
 server.use (req, res, next) ->
-  if request.method is 'OPTIONS' then res.send() else next()
+  if req.method is 'OPTIONS' then res.send() else next()
 
 # Import database schemas.
 server.db = require './schemas'
