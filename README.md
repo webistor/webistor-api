@@ -53,8 +53,6 @@
 
 ### Testing
 
-Install mocha globally using `npm install -g mocha`.
-
 Write your tests in `/test/<path>`. The convention is to make <path> the same as the path
 to the file that you're testing in `/src/<path>`. Generic tests may be placed
 in `test/<name>.coffee`, but should be avoided.

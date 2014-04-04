@@ -188,7 +188,7 @@ mocha = (argv, callback) ->
     options.push '--reporter'
     options.push 'spec'
 
-  launch 'mocha', options, callback
+  launch './node_modules/mocha/bin/_mocha', options, callback
 
 # ## *docco*
 #
