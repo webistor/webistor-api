@@ -53,9 +53,25 @@
 
 ### Testing
 
-Soon...
+Install mocha globally using `npm install -g mocha`.
+
+Write your tests in `/test/<path>`. The convention is to make <path> the same as the path
+to the file that you're testing in `/src/<path>`. Generic tests may be placed
+in `test/<name>.coffee`, but should be avoided.
+
+More about creating tests can be found in the documentation below. Tests look like this:
+
+```coffeescript
+describe "Mocha", ->
+  it "should be able to describe stuff", ->
+    describe.must.exist()
+```
+
+Run tests using `npm test` which is short for `cake test`.
 
 ### Documentation
+
+#### Application
 
 * [Lodash](http://lodash.com/docs): Utility library used.
 * [CoffeeScript](http://coffeescript.org/): Source code language.
@@ -69,3 +85,8 @@ Soon...
 * [Node Logging](https://github.com/Monwara/node-logging): Logging library used.
 * [Node bcrypt](https://github.com/ncb000gt/node.bcrypt.js): Hashing and cryptology library used.
 * [Node rand-token](https://github.com/sehrope/node-rand-token): Token generating library.
+
+#### Testing
+
+* [Mocha](http://visionmedia.github.io/mocha/): Test runner and describer
+* [Must](https://github.com/moll/js-must): BDD asserting library.
