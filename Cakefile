@@ -29,62 +29,41 @@ green = '\x1b[0;32m'
 reset = '\x1b[0m'
 red = '\x1b[0;31m'
 
-# Cakefile Tasks
-#
-# ## *docs*
-#
-# Generate Annotated Documentation
-#
-# <small>Usage</small>
-#
-# ```
-# cake docs
-# ```
+###*
+ * Docs
+ * Generate Annotated Documentation.
+###
 task 'docs', 'generate documentation', -> docco()
 
-# ## *build*
-#
-# Builds Source
-#
-# <small>Usage</small>
-#
-# ```
-# cake build
-# ```
-task 'build', 'compile source', -> build -> log ":)", green
+###*
+ * Build
+ * Builds Source. Can watch.
+###
+task 'build', 'compile source', (o) -> build o, -> log ":)", green
 
-# ## *watch*
-#
-# Builds your source whenever it changes
-#
-# <small>Usage</small>
-#
-# ```
-# cake watch
-# ```
-task 'watch', 'compile and watch', -> build true, -> log ":-)", green
+###*
+ * Watch
+ * Builds and watches.
+###
+task 'watch', 'short for [cake --watch build]', (o) -> o.watch = true and build o, -> log ":-)", green
 
-# ## *test*
-#
-# Runs your test suite.
-#
-# <small>Usage</small>
-#
-# ```
-# cake test
-# ```
-task 'test', 'run tests', -> build -> mocha -> log ":)", green
+###*
+ * Test
+ * Runs your test suite. Can watch.
+###
+task 'test', 'run tests', (o) -> build -> mocha o, -> log ":)", green
 
-# ## *clean*
-#
-# Cleans up generated js files
-#
-# <small>Usage</small>
-#
-# ```
-# cake clean
-# ```
+###*
+ * Clean
+ * Cleans up generated js files.
+###
 task 'clean', 'clean generated files', -> clean -> log ";)", green
+
+###*
+ * Watch
+ * Watch option for build or test.
+###
+option '-w', '--watch', 'watch for changes during test or build'
 
 
 # Internal Functions
@@ -146,18 +125,18 @@ launch = (cmd, options=[], callback) ->
 
 # ## *build*
 #
-# **given** optional boolean as watch
+# **given** optional object as argv
 # **and** optional function as callback
 # **then** invoke launch passing coffee command
 # **and** defaulted options to compile src to app
-build = (watch, callback) ->
-  if typeof watch is 'function'
-    callback = watch
-    watch = false
+build = (argv, callback) ->
+  if typeof argv is 'function'
+    callback = argv
+    argv = {}
 
-  options = ['-c', '-b', '-o' ]
-  options = options.concat files
-  options.unshift '-w' if watch
+  options = ['-c', '-b']
+  options.push '-w' if 'watch' of argv
+  options = options.concat ['-o', files...]
   launch 'coffee', options, callback
 
 # ## *unlinkIfCoffeeFile*
@@ -190,21 +169,24 @@ clean = (callback) ->
 
 # ## *mocha*
 #
-# **given** optional array of option flags
+# **given** optional command line arguments
 # **and** optional function as callback
 # **then** invoke launch passing mocha command
-mocha = (options, callback) ->
-  if typeof options is 'function'
-    callback = options
-    options = []
+mocha = (argv, callback) ->
+  if typeof argv is 'function'
+    callback = argv
+    argv = {}
 
-  # add coffee directive
-  options.push '--compilers'
-  options.push 'coffee:coffee-script/register'
+  options = ['--compilers', 'coffee:coffee-script/register', '--require', 'must']
 
-  # auto-require must
-  options.push '--require'
-  options.push 'must'
+  # Decide which output method to use based on whether we're watching or not.
+  if 'watch' of argv
+    options.push '--reporter'
+    options.push 'list'
+    options.push '--watch'
+  else
+    options.push '--reporter'
+    options.push 'spec'
 
   launch 'mocha', options, callback
 

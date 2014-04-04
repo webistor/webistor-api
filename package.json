@@ -4,8 +4,7 @@
   "description": "Webistor server API",
   "main": "lib/initialize.js",
   "scripts": {
-    "start": "nodemon -w lib/",
-    "test": "cake test"
+    "start": "nodemon -w lib/"
   },
   "repository": {
     "type": "git",

@@ -67,7 +67,7 @@ describe "Mocha", ->
     describe.must.exist()
 ```
 
-Run tests using `npm test` which is short for `cake test`.
+Run tests using `cake test` or `cake --watch test` to continuously test.
 
 ### Documentation
 
