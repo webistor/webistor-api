@@ -177,7 +177,7 @@ mocha = (argv, callback) ->
     callback = argv
     argv = {}
 
-  options = ['--compilers', 'coffee:coffee-script/register', '--require', 'must']
+  options = ['--recursive', '--compilers', 'coffee:coffee-script/register', '--require', 'must']
 
   # Decide which output method to use based on whether we're watching or not.
   if 'watch' of argv
