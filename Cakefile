@@ -45,7 +45,7 @@ task 'build', 'compile source', (o) -> build o, -> log ":)", green
  * Watch
  * Builds and watches.
 ###
-task 'watch', 'short for [cake --watch build]', (o) -> o.watch = true and build o, -> log ":-)", green
+task 'watch', 'short for [cake --watch build]', (o) -> (o.watch = true) and build o, -> log ":-)", green
 
 ###*
  * Test
