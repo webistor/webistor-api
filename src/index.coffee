@@ -4,7 +4,7 @@ Promise = require 'bluebird'
 config = require './config'
 log = require 'node-logging'
 AuthFactory = require './classes/auth-factory'
-SessionController = require './controllers/session'
+SessionController = require './controllers/session-controller'
 
 ##
 ## SHARED

@@ -3,7 +3,7 @@ Promise = require 'bluebird'
 _ = require 'lodash'
 AuthError = require '../classes/auth-error'
 
-module.exports = class Session extends Controller
+module.exports = class SessionController extends Controller
 
   authFactory: null
   User: null
@@ -48,9 +48,9 @@ module.exports = class Session extends Controller
   login: (req) ->
 
     # Figure out by what means to find the user.
-    find = if username of req.body
+    find = if 'username' of req.body
       _.pick req.body, 'username'
-    else if email of req.body
+    else if 'email' of req.body
       _.pick req.body, 'email'
     else false
 
@@ -58,9 +58,9 @@ module.exports = class Session extends Controller
     return Promise.reject "No username or email address given." unless find
 
     # Figure out by which means to authenticate the user.
-    authType = if token of req.body
+    authType = if 'token' of req.body
       {method: 'authenticateToken', value: req.body.token}
-    else if password of req.body
+    else if 'password' of req.body
       {method: 'authenticatePassword', value: req.body.password}
     else false
 
