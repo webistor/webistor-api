@@ -4,9 +4,6 @@
 Auth = require './classes/auth'
 config = require './config'
 
-# Connect to the database.
-mongoose.connect config.database
-
 
 ##
 ## SCHEMA DEFINITIONS

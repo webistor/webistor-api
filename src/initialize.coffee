@@ -4,7 +4,7 @@ Promise = require 'bluebird'
 config = require './config'
 log = require 'node-logging'
 AuthFactory = require './classes/auth-factory'
-Session = require './controllers/session'
+SessionController = require './controllers/session'
 
 ##
 ## SHARED
@@ -34,7 +34,7 @@ client.use express.static config.publicHtml
 client.get '*', (req, res) -> res.sendfile "#{config.publicHtml}/index.html"
 
 # Start listening on the client port.
-client.listen config.clientPort
+client.listen config.clientPort if config.clientPort
 
 
 ##
@@ -72,9 +72,10 @@ server.use (req, res, next) ->
 
 # Import database schemas.
 server.db = require './schemas'
+server.db.mongoose.connect config.database
 
 # Instantiate controllers.
-server.session = new Session new AuthFactory, server.db.User
+server.session = new SessionController new AuthFactory, server.db.User
 
 # Route: Set up simple database routes.
 # server.db.Entry.methods ['get', 'post', 'put', 'delete']
@@ -85,7 +86,7 @@ server.post '/users/me', server.session.getMiddleware 'login'
 server.get '/session/loginCheck', server.session.getSyncMiddleware 'isLoggedIn'
 
 # Start listening on the server port.
-server.listen config.serverPort
+server.listen config.serverPort if config.serverPort
 
 
 ##
@@ -100,4 +101,4 @@ proxy = http.createServer (req) ->
     when "api.#{root}" then server arguments...
 
 # Attempt to listen on the HTTP port.
-proxy.listen 1337
+proxy.listen config.httpPort if config.httpPort
