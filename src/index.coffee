@@ -102,3 +102,6 @@ proxy = http.createServer (req) ->
 
 # Attempt to listen on the HTTP port.
 proxy.listen config.httpPort if config.httpPort
+
+# Export our servers.
+module.exports = {client, server, proxy}
