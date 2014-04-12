@@ -27,7 +27,7 @@
 * Start the application.
   `node lib/initialize.js`
 
-## Developing
+## Development
 
 ### Prerequisites
 
@@ -86,3 +86,10 @@ Run tests using `cake test` or `cake --watch test` to continuously test.
 
 * [Mocha](http://visionmedia.github.io/mocha/): Test runner and describer
 * [Must](https://github.com/moll/js-must): BDD asserting library.
+
+### Planned features
+
+* All features from the [current stable](https://github.com/Tuxion/webistor-api/tree/0.4).
+* Sharing of entries.
+* [Elastic Search](http://www.elasticsearch.org/) with the
+  [Node client](https://github.com/phillro/node-elasticsearch-client).
