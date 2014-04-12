@@ -19,8 +19,6 @@
 * Install dependencies
   `cd webistor-api`
   `npm install`
-* Install CoffeeScript
-  `npm install -g coffee-script`
 * Compile CoffeeScript
   `cake build`
 

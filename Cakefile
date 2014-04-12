@@ -137,7 +137,7 @@ build = (argv, callback) ->
   options = ['-c', '-b']
   options.push '-w' if 'watch' of argv
   options = options.concat ['-o', files...]
-  launch 'coffee', options, callback
+  launch './node_modules/coffee-script/bin/coffee', options, callback
 
 # ## *unlinkIfCoffeeFile*
 #
