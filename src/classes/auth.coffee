@@ -36,8 +36,8 @@ module.exports = class Auth
       # Return the middleware.
       return (next) ->
         return do next unless options.force or this.isModified 'password'
-        bcrypt.genSalt Auth.SALT_WORK_FACTOR
-        .then (salt) => bcrypt.hash @password, salt
+        bcrypt.genSaltAsync Auth.SALT_WORK_FACTOR
+        .then (salt) => bcrypt.hashAsync @password, salt
         .then (hash) => @password = hash
         .catch (err) -> next err
         .done -> do next
@@ -45,7 +45,7 @@ module.exports = class Auth
   }
   
   # Class properties.
-  expireTimeout: -1
+  expireTimeout: null
   expired: false
   expireCallbacks: null
   attempts: 0
@@ -73,7 +73,7 @@ module.exports = class Auth
     @attempt()
     return Promise.reject new AuthError "Auth instance expired.", AuthError.EXPIRED if @isExpired()
     return Promise.reject new AuthError "Auth instance locked.", AuthError.LOCKED if @isLocked()
-    bcrypt.compare password, @user.password
+    bcrypt.compareAsync password, @user.password
     .then (ok) -> throw new AuthError "Non-matching passwords.", AuthError.MISSMATCH unless ok
   
   ###*
@@ -88,7 +88,7 @@ module.exports = class Auth
     return Promise.reject new AuthError "Auth instance expired.", AuthError.EXPIRED if @isExpired()
     return Promise.reject new AuthError "Auth instance locked.", AuthError.LOCKED if @isLocked()
     return Promise.reject new AuthError "No authentication token present.", AuthError.MISSING unless @token?
-    Promise.return @token is token
+    Promise.resolve @token is token
     .then (ok) =>
       throw new AuthError "Non-matching tokens.", AuthError.MISSMATCH unless ok
       @token = null
@@ -139,7 +139,7 @@ module.exports = class Auth
   ###
   refresh: ->
     return this if @isLocked() or @isExpired() or @token?
-    clearTimeout @expireTimeout if @expireTimeout > -1
+    clearTimeout @expireTimeout if @expireTimeout?
     @expireTimeout = setTimeout @expire.bind(@), Auth.EXPIRATION_DURATION
     return this
   
