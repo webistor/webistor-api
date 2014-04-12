@@ -48,6 +48,8 @@
   `cake watch`
 * Watch JavaScript
   `npm start`
+* **Don't commit your local environment settings**:
+  [How to ignore files](https://help.github.com/articles/ignoring-files)
 
 ### Testing
 
