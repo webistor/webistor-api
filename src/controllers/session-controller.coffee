@@ -2,6 +2,7 @@ Controller = require './base/controller'
 Promise = require 'bluebird'
 _ = require 'lodash'
 AuthError = require '../classes/auth-error'
+log = require 'node-logging'
 
 module.exports = class SessionController extends Controller
 
@@ -25,7 +26,7 @@ module.exports = class SessionController extends Controller
   ###
   getUser: (req) ->
     return Promise.reject "Not logged in." unless @isLoggedIn req
-    Promise.promisisfy(@User.findById, @User) req.session.userId
+    Promise.promisify(@User.findById, @User) req.session.userId
 
   ###*
    * Return true if a user is logged in.
@@ -49,9 +50,9 @@ module.exports = class SessionController extends Controller
 
     # Figure out by what means to find the user.
     find = if 'username' of req.body
-      _.pick req.body, 'username'
+      {username: req.body.username.toLowerCase()}
     else if 'email' of req.body
-      _.pick req.body, 'email'
+      {email: req.body.email.toLowerCase()}
     else false
 
     # If we have no means to find the user.
@@ -70,24 +71,22 @@ module.exports = class SessionController extends Controller
     # We want the auth object out here.
     auth = null
 
-    # Find the user in the database.
-    Promise.promisisfy(@User.findOne, @User) find
+    # Find the user in the database and force-include the password.
+    Promise.promisify(@User.findOne, @User) find, '+password'
 
     # Authenticate the user.
     .then (user) =>
       throw new AuthError "User not found.", AuthError.MISSMATCH unless user
       auth = @authFactory.get(user)
-      auth[authType.method] authType.value
+      return auth[authType.method] authType.value
 
-    # Store the users ID in their session.
+    # Store the users ID in their session and return the user object without password.
     .then ->
-      req.session.userId = user._id
-
-    # Return the user object without password.
-    .return _.omit auth.user, 'password'
+      req.session.userId = auth.user._id
+      return _.omit auth.user, 'password'
 
     # Generate a user-friendly error message.
-    .catch (AuthError, err) ->
+    .catch AuthError, (err) ->
 
       # Too many authentication attempts.
       if err.reason is AuthError.LOCKED
@@ -99,9 +98,9 @@ module.exports = class SessionController extends Controller
       # Missing credentials.
       if err.reason is AuthError.MISSMATCH
         throw new Error "
-          Invalid username/email or password/token." + if auth.attempts > 2 then "
+          Invalid username/email or password/token." + (if auth?.attempts > 2 then "
           Please note that your account will be locked out after too many attempts and you
-          will not be able to log in or use the password forgotten function for an hour."
+          will not be able to log in or use the password forgotten function for an hour." else '')
 
       # Expired authentication token.
       if err.reason is AuthError.MISSING and authType.method is 'authenticateToken'

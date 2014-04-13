@@ -15,7 +15,7 @@ schemas =
   # The User schema.
   User: Schema
     email:    type: String, required: true, unique: true, lowercase: true, match: /^.+?@[^@]+$/
-    username: type: String, required: true, unique: true, match: /^[\w]{4,48}$/
+    username: type: String, required: true, unique: true, lowercase: true, match: /^[\w]{4,48}$/
     password: type: String, required: true, select: false
     friends:  type: [ObjectId], ref: 'user'
   
