@@ -83,6 +83,7 @@ server.session = new SessionController new AuthFactory, server.db.User
 # Route: Set up authentication related routes.
 server.get '/users/me', server.session.getMiddleware 'getUser'
 server.post '/users/me', server.session.getMiddleware 'login'
+server.delete '/users/me', server.session.getSyncMiddleware 'logout'
 server.get '/session/loginCheck', server.session.getSyncMiddleware 'isLoggedIn'
 
 # Start listening on the server port.

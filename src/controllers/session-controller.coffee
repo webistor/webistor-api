@@ -113,3 +113,15 @@ module.exports = class SessionController extends Controller
       throw new Error "
         Something went wrong while attempting to log you in. Try again later. If this
         problem persists, please contact an administrator."
+
+  ###*
+   * Log a user out, removing them from their session.
+   *
+   * @param {http.IncomingMessage} req The Express request object.
+   *
+   * @return {String} Status message.
+  ###
+  logout: (req) ->
+    throw new Error "User wasn't logged in." unless @isLoggedIn req
+    delete req.session.userId
+    return "Successfully logged out."
