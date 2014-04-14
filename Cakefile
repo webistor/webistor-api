@@ -218,4 +218,3 @@ mocha = (argv, callback) ->
 # **then** invoke launch passing docco command
 docco = (callback) ->
   walk 'src', (err, files) -> launch 'docco', files, callback
-
