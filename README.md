@@ -25,14 +25,12 @@
 ## Running
 
 * Start the application.
-  `node lib/initialize.js`
+  `cake start` or `cake -w start` to restart automatically on changes.
 
 ## Development
 
 ### Prerequisites
 
-* Install Nodemon
-  `npm install -g nodemon`
 * Install [git flow](https://github.com/nvie/gitflow)
   `sudo apt-get install git-flow`
   Or try: [Install guide](https://github.com/nvie/gitflow/wiki/Installation)
@@ -47,7 +45,7 @@
 * Watch CoffeScript
   `cake watch`
 * Watch JavaScript
-  `npm start`
+  `cake -w start`
 * **Don't commit your local environment settings**:
   [How to ignore files](https://help.github.com/articles/ignoring-files)
 

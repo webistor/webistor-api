@@ -40,6 +40,12 @@ task 'build', 'compile source', (o) -> build o, -> log ":)", green
 task 'watch', 'short for [cake --watch build]', (o) -> (o.watch = true) and build o, -> log ":-)", green
 
 ###*
+ * Start
+ * Run the application. Can watch.
+###
+task 'start', 'start the app', (o) -> build -> (if o.watch then nodemon else start) o, -> log ":D", green
+
+###*
  * Test
  * Runs your test suite. Can watch.
 ###
@@ -53,7 +59,7 @@ task 'clean', 'clean generated files', -> clean -> log ";)", green
 
 ###*
  * Watch
- * Watch option for build or test.
+ * Watch option for build, start or test.
 ###
 option '-w', '--watch', 'watch for changes during test or build'
 
@@ -125,11 +131,35 @@ build = (argv, callback) ->
   if typeof argv is 'function'
     callback = argv
     argv = {}
-
   options = ['-c', '-b']
   options.push '-w' if 'watch' of argv
   options = options.concat ['-o', files...]
   launch './node_modules/coffee-script/bin/coffee', options, callback
+
+# ## *start*
+#
+# **given** optional object as argv
+# **and** optional function as callback
+# **then** invoke launch passing node command
+start = (argv, callback) ->
+  if typeof argv is 'function'
+    callback = argv
+    argv = {}
+  options = ['lib/index.js']
+  launch 'node', options, callback
+
+# ## *nodemon*
+#
+# **given** optional object as argv
+# **and** optional function as callback
+# **then** invoke launch passing nodemon command
+# **and** defaulted options to watch lib/*
+nodemon = (argv, callback) ->
+  if typeof argv is 'function'
+    callback = argv
+    argv = {}
+  options = ['-w', 'lib/']
+  launch './node_modules/nodemon/bin/nodemon.js', options, callback
 
 # ## *unlinkIfCoffeeFile*
 #
