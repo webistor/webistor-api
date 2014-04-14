@@ -64,7 +64,7 @@ server.use express.json()
 
 # Set up session support.
 server.use express.cookieParser();
-server.use express.cookieSession secret: config.sessionSecret, cookie: maxAge: 60 * 60 * 1000
+server.use express.cookieSession secret: config.sessionSecret, cookie:maxAge:60*60*1000
 
 # Send OPTIONS response at this point.
 server.use (req, res, next) ->
