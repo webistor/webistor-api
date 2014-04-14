@@ -1,23 +1,24 @@
+{EventEmitter} = require 'events'
 Promise = require 'bluebird'
 bcrypt = Promise.promisifyAll require 'bcrypt'
 randtoken = require 'rand-token'
 _ = require 'lodash'
 AuthError = require './auth-error'
 
-module.exports = class Auth
-  
+module.exports = class Auth extends EventEmitter
+
   # The default is 10 at this moment in time, but this should be increased on faster servers.
   @SALT_WORK_FACTOR: 10
-  
+
   # Any multi-step authentication attempts have one hour to complete before expiring.
   @EXPIRATION_DURATION: 1000*60*60
-  
+
   # Any multi-step authentication attempts should complete in under the following amount of steps.
   @MAX_ALLOWED_ATTEMPTS: 10
-  
+
   # Container for middleware.
   @Middleware: {
-    
+
     ###*
      * Middleware for Mongoose which hashes a password.
      *
@@ -28,11 +29,11 @@ module.exports = class Auth
      * @return {Function} The middleware.
     ###
     hashPassword: (options = {}) ->
-      
+
       # Complete options.
       _.defaults options,
         force: false
-      
+
       # Return the middleware.
       return (next) ->
         return do next unless options.force or this.isModified 'password'
@@ -41,16 +42,15 @@ module.exports = class Auth
         .then (hash) => @password = hash
         .catch (err) -> next err
         .done -> do next
-        
+
   }
-  
+
   # Class properties.
   expireTimeout: null
   expired: false
-  expireCallbacks: null
   attempts: 0
   token: null
-  
+
   ###*
    * Construct an authentication object for the given user.
    *
@@ -58,10 +58,10 @@ module.exports = class Auth
    * @param {Function} onExpire An optional callback for when the authentication class expires.
   ###
   constructor: (@user, onExpire) ->
-    @expireCallbacks = []
+    super
     @onExpire onExpire if onExpire?
     @refresh()
-  
+
   ###*
    * Attempt to authenticate the user by comparing the given password to his own password.
    *
@@ -75,7 +75,7 @@ module.exports = class Auth
     return Promise.reject new AuthError "Auth instance locked.", AuthError.LOCKED if @isLocked()
     bcrypt.compareAsync password, @user.password
     .then (ok) -> throw new AuthError "Non-matching passwords.", AuthError.MISSMATCH unless ok
-  
+
   ###*
    * Attempt to authenticate the user from the given authentication token.
    *
@@ -92,7 +92,7 @@ module.exports = class Auth
     .then (ok) =>
       throw new AuthError "Non-matching tokens.", AuthError.MISSMATCH unless ok
       @token = null
-  
+
   ###*
    * Generate a single-use authentication token (removing the previous).
    *
@@ -112,7 +112,7 @@ module.exports = class Auth
     return Promise.reject new AuthError "Auth instance expired.", AuthError.EXPIRED if @isExpired()
     return Promise.reject new AuthError "Auth instance locked.", AuthError.LOCKED if @isLocked()
     @token = randtoken.generate 32
-  
+
   ###*
    * Determine if this authentication session is locked for any reason.
    *
@@ -120,16 +120,18 @@ module.exports = class Auth
   ###
   isLocked: ->
     @attempts > Auth.MAX_ALLOWED_ATTEMPTS
-  
+
   ###*
    * Increment the total amount of authentication attempts and refresh the expiry date.
+   *
+   * @emits attempt when called.
    *
    * @chainable
   ###
   attempt: ->
-    @attempts++
+    @emit 'attempt', ++@attempts
     @refresh()
-  
+
   ###*
    * Refresh the expiry date.
    *
@@ -142,36 +144,37 @@ module.exports = class Auth
     clearTimeout @expireTimeout if @expireTimeout?
     @expireTimeout = setTimeout @expire.bind(@), Auth.EXPIRATION_DURATION
     return this
-  
+
   ###*
    * Add a callback for the event of an expiration.
-   * 
-   * The callback is executed during the next tick if the instance has already expired.
+   *
+   * As opposed to directly listening to the 'expire' event, this callback is executed
+   * during the next tick if the instance has already expired. Whereas otherwise it would
+   * never get executed anymore.
    *
    * @param {Function} callback The function to call.
    *
    * @chainable
   ###
   onExpire: (callback) ->
-    
     if @isExpired()
       process.nextTick callback
       return this
-    
-    @expireCallbacks.push callback
-    return this
-  
+    @addListener 'expire', callback
+
   ###*
    * Expire this instance, making it immutable and unusable and calling the callbacks.
-   * 
-   * @return null
+   *
+   * @emits expire when called the first time.
+   *
+   * @return {Boolean} True if the 'expire' event had listeners.
   ###
   expire: ->
-    Object.freeze this
+    return if @isExpired()
     @expired = true
-    callback() for callback in @expireCallbacks when callback instanceof Function
-    return null
-  
+    Object.freeze this
+    @emit 'expire'
+
   ###*
    * Return true if this authentication instance has expired.
    *
