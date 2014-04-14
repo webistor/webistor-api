@@ -2,6 +2,14 @@
 
 ## Security
 
+### Improvements
+
+* Check the length of the password before comparing it with bCrypt to prevent time-consuming
+  hashing on non-passwords.
+* Create fake Auth objects for users that aren't in our database, to prevent leaking users.
+
+### Suspicion levels
+
 * The strictness/strength of security measures at any given time is controlled by a
   server-wide suspicion level.
 * There are three suspicion levels:
