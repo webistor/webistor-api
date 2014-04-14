@@ -3,19 +3,18 @@ Promise = require 'bluebird'
 _ = require 'lodash'
 AuthError = require '../classes/auth-error'
 log = require 'node-logging'
+{User} = require '../schemas'
 
 module.exports = class SessionController extends Controller
 
   authFactory: null
-  User: null
 
   ###*
    * Construct a session controller.
    *
    * @param {AuthFactory} @authFactory The AuthFactory instance to use for authentication.
-   * @param {Function} @User The model class to use for interacting with storage.
   ###
-  constructor: (@authFactory, @User) ->
+  constructor: (@authFactory) ->
 
   ###*
    * Promise a user document based on the session.
@@ -26,7 +25,7 @@ module.exports = class SessionController extends Controller
   ###
   getUser: (req) ->
     return Promise.reject "Not logged in." unless @isLoggedIn req
-    Promise.promisify(@User.findById, @User) req.session.userId
+    Promise.promisify(User.findById, User) req.session.userId
 
   ###*
    * Return true if a user is logged in.
@@ -72,7 +71,7 @@ module.exports = class SessionController extends Controller
     auth = null
 
     # Find the user in the database and force-include the password.
-    Promise.promisify(@User.findOne, @User) find, '+password'
+    Promise.promisify(User.findOne, User) find, '+password'
 
     # Authenticate the user.
     .then (user) =>

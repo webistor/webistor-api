@@ -75,10 +75,7 @@ server.db = require './schemas'
 server.db.mongoose.connect config.database
 
 # Instantiate controllers.
-server.session = new SessionController new AuthFactory, server.db.User
-
-# Route: Set up simple database routes.
-# server.db.Entry.methods ['get', 'post', 'put', 'delete']
+server.session = new SessionController new AuthFactory
 
 # Route: Set up authentication related routes.
 server.get '/users/me', server.session.getMiddleware 'getUser'

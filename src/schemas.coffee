@@ -11,19 +11,19 @@ config = require './config'
 
 # Export Schemas.
 schemas =
-  
+
   # The User schema.
   User: Schema
     email:    type: String, required: true, unique: true, lowercase: true, match: /^.+?@[^@]+$/
-    username: type: String, required: true, unique: true, lowercase: true, match: /^[\w]{4,48}$/
+    username: type: String, required: true, unique: true, lowercase: true, match: /^[\w-_]{4,48}$/
     password: type: String, required: true, select: false
     friends:  type: [ObjectId], ref: 'user'
-  
+
   # The Group schema.
   Group: Schema
-    author:  type: ObjectId, ref: 'user', required: true
+    author:  type: ObjectId, ref: 'user', required: true, index: true
     members: type: [ObjectId], ref: 'user'
-  
+
   # The Entry schema.
   Entry: Schema
     author:       type: ObjectId, ref: 'user', required: true, index: true
@@ -32,14 +32,14 @@ schemas =
     userShare:    type: [ObjectId], ref: 'user'
     groupShare:   type: [ObjectId], ref: 'group'
     publicShare:  type: Boolean, default: false
-    title:        type: String, trim: true, match: /^[\w\s]{1,255}$/
+    title:        type: String, trim: true, match: /^.{1,255}$/
     url:          type: String, index: true
     description:  type: String
     tags:         type: [ObjectId], ref: 'tag'
-  
+
   # The Tag schema.
   Tag: Schema
-    author: type: ObjectId, ref: 'user'
+    author: type: ObjectId, ref: 'user', index: true
     title:  type: String, trim: true, match: /^[\w\s]{1,255}$/
     color:  type: String, match: /^[0-9A-F]{6}$/
 
