@@ -93,12 +93,12 @@ module.exports = class SessionController extends Controller
         throw new Error "
           You have expended your authentication attempts. Please wait an hour and retry.
           This is a safety measure to protect your account from theft. If you were not the
-          cause of this error message, please contact an administrator."
+          cause of this error message, please contact support."
 
       # Missing credentials.
       if err.reason is AuthError.MISSMATCH
         throw new Error "
-          Invalid username/email or password/token." + (if auth?.attempts > 2 then "
+          Invalid username/email or password/token." + (if auth?.attempts > 2 then " "+"
           Please note that your account will be locked out after too many attempts and you
           will not be able to log in or use the password forgotten function for an hour." else '')
 
@@ -112,7 +112,7 @@ module.exports = class SessionController extends Controller
       # Some other reason.
       throw new Error "
         Something went wrong while attempting to log you in. Try again later. If this
-        problem persists, please contact an administrator."
+        problem persists, please contact support."
 
   ###*
    * Log a user out, removing them from their session.
