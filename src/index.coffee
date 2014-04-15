@@ -84,8 +84,8 @@ server.delete '/users/me', server.session.getMiddleware 'logout'
 server.get '/session/loginCheck', server.session.getMiddleware 'isLoggedIn'
 
 # Shared middleware.
-ensureLogin = server.session.getSyncMiddleware 'ensureLogin'
-ensureOwnership = server.session.getSyncMiddleware 'ensureOwnership'
+ensureLogin = server.session.getMiddleware 'ensureLogin'
+ensureOwnership = server.session.getMiddleware 'ensureOwnership'
 
 # Route: Set up entry REST routes.
 server.db.Entry.methods ['get', 'post', 'put', 'delete']
