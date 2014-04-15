@@ -77,11 +77,31 @@ server.db.mongoose.connect config.database
 # Instantiate controllers.
 server.session = new SessionController new AuthFactory
 
-# Route: Set up authentication related routes.
+# Route: Set up session controller routes.
 server.get '/users/me', server.session.getMiddleware 'getUser'
 server.post '/users/me', server.session.getMiddleware 'login'
 server.delete '/users/me', server.session.getSyncMiddleware 'logout'
 server.get '/session/loginCheck', server.session.getSyncMiddleware 'isLoggedIn'
+
+# Shared middleware.
+ensureLogin = server.session.getSyncMiddleware 'ensureLogin'
+ensureOwnership = server.session.getSyncMiddleware 'ensureOwnership'
+
+# Route: Set up entry REST routes.
+server.db.Entry.methods ['get', 'post', 'put', 'delete']
+server.db.Entry.before 'get', ensureOwnership
+server.db.Entry.before 'post', ensureLogin
+server.db.Entry.before 'put', ensureOwnership
+server.db.Entry.before 'delete', ensureOwnership
+server.db.Entry.register server, '/entries'
+
+# Route: Set up tag REST routes.
+server.db.Tag.methods ['get', 'post', 'put', 'delete']
+server.db.Tag.before 'get', ensureOwnership
+server.db.Tag.before 'post', ensureLogin
+server.db.Tag.before 'put', ensureOwnership
+server.db.Tag.before 'delete', ensureOwnership
+server.db.Tag.register server, '/tags'
 
 # Start listening on the server port.
 server.listen config.serverPort if config.serverPort
