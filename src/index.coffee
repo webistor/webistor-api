@@ -14,7 +14,7 @@ SessionController = require './controllers/session-controller'
 favicon = express.favicon "#{config.publicHtml}/icons/favicon.ico"
 
 # Set up logging.
-Promise.onPossiblyUnhandledRejection -> log.dbg 'Supressing PossiblyUnhandledRejection.'
+# Promise.onPossiblyUnhandledRejection -> log.dbg 'Supressing PossiblyUnhandledRejection.'
 Promise.longStackTraces() if config.logLevel is 'debug'
 log.setLevel config.logLevel
 
@@ -80,8 +80,8 @@ server.session = new SessionController new AuthFactory
 # Route: Set up authentication related routes.
 server.get '/users/me', server.session.getMiddleware 'getUser'
 server.post '/users/me', server.session.getMiddleware 'login'
-server.delete '/users/me', server.session.getSyncMiddleware 'logout'
-server.get '/session/loginCheck', server.session.getSyncMiddleware 'isLoggedIn'
+server.delete '/users/me', server.session.getMiddleware 'logout'
+server.get '/session/loginCheck', server.session.getMiddleware 'isLoggedIn'
 
 # Start listening on the server port.
 server.listen config.serverPort if config.serverPort
