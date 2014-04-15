@@ -28,7 +28,7 @@ module.exports = class SessionController extends Controller
     Promise.promisify(User.findById, User) req.session.userId
 
   ###*
-   * Return true if a user is logged in.
+   * Return true if a user is logged in, false otherwise.
    *
    * @param {http.IncomingMessage} req The Express request object.
    *
@@ -36,6 +36,34 @@ module.exports = class SessionController extends Controller
   ###
   isLoggedIn: (req) ->
     req.session.userId?
+
+  ###*
+   * Throw an exception if the request was not made by a logged in user. Return null otherwise.
+   *
+   * @param {http.IncomingMessage} req The Express request object.
+   *
+   * @return {null}
+  ###
+  ensureLogin: (req) ->
+    return null if @isLoggedIn req
+    throw new Error "You are not logged in."
+
+  ###*
+   * Ensure that the request mongoose query filters by author.
+   *
+   * @param {http.IncomingMessage} req The Express request object.
+   * @param {http.ServerResponse} res The Express response object.
+   * @param {String} field ["author"] The field to filter on.
+   *
+   * @return {null}
+  ###
+  ensureOwnership: (req, res, field = 'author') ->
+    @ensureLogin req
+    throw new Error "No query." unless req.quer?
+    where = {}
+    where[field] = req.session.userId
+    req.quer.where where
+    return null
 
   ###*
    * Attempt to log a user in by reading their credentials from the request body.
