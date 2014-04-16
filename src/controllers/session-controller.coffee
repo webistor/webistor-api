@@ -63,6 +63,7 @@ module.exports = class SessionController extends Controller
     where = {}
     where[field] = req.session.userId
     req.quer.where where
+    req.body?[field] = req.session.userId
     return null
 
   ###*

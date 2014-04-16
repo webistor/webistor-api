@@ -90,7 +90,7 @@ ensureOwnership = server.session.getMiddleware 'ensureOwnership'
 # Route: Set up entry REST routes.
 server.db.Entry.methods ['get', 'post', 'put', 'delete']
 server.db.Entry.before 'get', ensureOwnership
-server.db.Entry.before 'post', ensureLogin
+server.db.Entry.before 'post', ensureOwnership
 server.db.Entry.before 'put', ensureOwnership
 server.db.Entry.before 'delete', ensureOwnership
 server.db.Entry.register server, '/entries'
@@ -98,7 +98,7 @@ server.db.Entry.register server, '/entries'
 # Route: Set up tag REST routes.
 server.db.Tag.methods ['get', 'post', 'put', 'delete']
 server.db.Tag.before 'get', ensureOwnership
-server.db.Tag.before 'post', ensureLogin
+server.db.Tag.before 'post', ensureOwnership
 server.db.Tag.before 'put', ensureOwnership
 server.db.Tag.before 'delete', ensureOwnership
 server.db.Tag.register server, '/tags'
