@@ -52,7 +52,7 @@ module.exports = class SessionController extends Controller
    * Ensure that the request mongoose query filters by author.
    *
    * @param {http.IncomingMessage} req The Express request object.
-   * @param {http.ServerResponse} res The Express response object.
+   * @param {null} res Not used by this method.
    * @param {String} field ["author"] The field to filter on.
    *
    * @return {null}
@@ -63,7 +63,8 @@ module.exports = class SessionController extends Controller
     where = {}
     where[field] = req.session.userId
     req.quer.where where
-    req.body?[field] = req.session.userId
+    (if Array.isArray req.body then req.body else [req.body])
+    .forEach (resource) -> resource?[field] = req.session.userId
     return null
 
   ###*
