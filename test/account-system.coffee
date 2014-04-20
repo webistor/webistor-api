@@ -1,5 +1,5 @@
 supertest = require 'supertest'
-require './_config'
+config = require './_config'
 Auth = require '../src/classes/auth'
 {server} = require '../src'
 {User} = server.db
@@ -14,17 +14,17 @@ onSuccess = (callback) -> (err, args...) ->
   throw err if err
   callback? args...
 
-userTemplate =
-  email: 'aldwin.vlasblom@gmail.com'
-  username: 'avaq'
-  password: "suchpassword"
-
 
 ##
 ## TESTS
 ##
 
 describe "The authentication class", ->
+
+  userTemplate =
+    email: 'aldwin.vlasblom@gmail.com'
+    username: 'avaq'
+    password: "suchpassword"
 
   before (done) ->
     Auth.EXPIRATION_DURATION = 200
@@ -45,6 +45,7 @@ describe "The authentication class", ->
     auth = new Auth @user, done
 
   it "should not expire if refreshed in time", (done) ->
+    @slow 750
     passed = false
     auth = new Auth @user, ->
       passed.must.be true
@@ -69,10 +70,14 @@ describe "The authentication class", ->
     auth.authenticateToken token
     .done done, onSuccess
 
-
 describe "Managing users", ->
 
   describe "directly through mongoose", ->
+
+    userTemplate =
+      email: 'aldwin.vlasblom@gmail.com'
+      username: 'avaq'
+      password: "suchpassword"
 
     before (done) -> User.remove {}, done
     afterEach (done) -> User.remove {}, done
@@ -98,59 +103,77 @@ describe "Managing users", ->
 
   describe "through the REST API", ->
 
-    before (done) -> User.create userTemplate, done
-    after (done) -> User.remove {}, done
+    logError = (done) -> (err, res) ->
+      return done() unless err
+      responseErr = res?.body?.error or res?.text
+      message = (err.message or err.toString())
+      message += (" because: " + responseErr) if responseErr
+      done new Error message
 
     req = supertest server
-    agent = supertest.agent server
+
+    agentArcher = supertest.agent server
+    agentBond   = supertest.agent server
+    agentCortez = supertest.agent server
+
+    archer = username: 'archer', email: 'sterling@isis.example.com', password: 'guest'
+    bond   = username: 'bond007', email: 'james.bond@rn.example.com', password: '��U�yύi�'
+    cortez = username: 'spykid', email: 'carmen_h8_school@msn.example.com', password: '[)14p3r'
+
+    before (done) -> User.create archer, done
+    after (done) -> User.remove {}, done
 
     it "should repond with value:false when doing a login check without a login", (done) ->
       req.get '/session/loginCheck'
       .expect 200
       .expect value:false
-      .end done
+      .end logError done
 
     it "should respond with 404 when the 'me' resource is requested without a login", (done) ->
       req.get '/users/me'
       .expect 404
-      .end done
+      .end logError done
 
     it "should not allow logging in with empty credentials", (done) ->
       req.post '/users/me'
-      .expect 401
-      .expect error: "No username or email address given."
-      .end done
+      .send {}
+      .expect 400
+      .end logError done
 
-    it "should not allow logging in with invalid credentials", (done) ->
+    it "should not allow logging in with invalid username", (done) ->
       req.post '/users/me'
-      .send username: "Bob", password: "suchpassword"
+      .send username: "bob", password: "suchpassword"
       .expect 401
-      .expect error: "Invalid username/email or password/token."
-      .end done
+      .end logError done
+
+    it "should not allow logging in with invalid password", (done) ->
+      req.post '/users/me'
+      .send username: "archer", password: "suchpassword"
+      .expect 401
+      .end logError done
 
     it "should allow logging in with valid credentials", (done) ->
-      agent.post '/users/me'
-      .send username: userTemplate.username, password: userTemplate.password
+      agentArcher.post '/users/me'
+      .send username: archer.username, password: archer.password
       .expect 200
       .end onSuccess (res) ->
-        res.body.username.must.be userTemplate.username
+        res.body.username.must.be archer.username
         done()
 
     it "should repond with value:true when doing a login check with a login", (done) ->
-      agent.get '/session/loginCheck'
+      agentArcher.get '/session/loginCheck'
       .expect 200
       .expect value:true
-      .end done
+      .end logError done
 
     it "should respond with the logged in user when the 'me' resource is requested with a login", (done) ->
-      agent.get '/users/me'
+      agentArcher.get '/users/me'
       .expect 200
       .end onSuccess (res) ->
-        res.body.username.must.be userTemplate.username
+        res.body.username.must.be archer.username
         done()
 
     it "should not share sessions between agents", (done) ->
-      supertest.agent server
-      .get '/users/me'
+      agentBond.get '/users/me'
       .expect 404
-      .end done
+      .end logError done
