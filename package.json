@@ -14,14 +14,18 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
-    "express": "~3",
-    "mongoose": "~3",
-    "lodash": "~2",
-    "node-restful": "*",
-    "node-logging": "*",
-    "bluebird": "~1",
     "bcrypt": "~0.7",
-    "rand-token": "~0.2"
+    "bluebird": "~1",
+    "body-parser": "~1",
+    "express": "~4",
+    "lodash": "~2",
+    "mongoose": "~3",
+    "node-logging": "*",
+    "node-restful": "*",
+    "rand-token": "~0.2",
+    "cookie-session": "~1",
+    "static-favicon": "~1",
+    "serve-static": "~1"
   },
   "devDependencies": {
     "must": "~0.11",

@@ -5,13 +5,17 @@ config = require './config'
 log = require 'node-logging'
 AuthFactory = require './classes/auth-factory'
 SessionController = require './controllers/session-controller'
+favicon = require 'static-favicon'
+{json} = require 'body-parser'
+session = require 'cookie-session'
+serveStatic = require 'serve-static'
 
 ##
 ## SHARED
 ##
 
 # Create shared middleware.
-favicon = express.favicon "#{config.publicHtml}/icons/favicon.ico"
+favicon = favicon "#{config.publicHtml}/icons/favicon.ico"
 
 # Set up logging.
 # Promise.onPossiblyUnhandledRejection -> log.dbg 'Supressing PossiblyUnhandledRejection.'
@@ -30,7 +34,7 @@ client = express()
 client.use favicon
 
 # Set up routing to serve up static files from the /public folder, or index.html.
-client.use express.static config.publicHtml
+client.use serveStatic config.publicHtml
 client.get '*', (req, res) -> res.sendfile "#{config.publicHtml}/index.html"
 
 # Start listening on the client port.
@@ -54,21 +58,17 @@ server.use (req, res, next) ->
     if req.method is 'OPTIONS'
       res.header 'Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH'
       res.header 'Access-Control-Allow-Headers', req.headers['access-control-request-headers']
+      return res.end()
   next()
 
 # Set up shared middleware.
 # server.use favicon
 
 # Parse request body as JSON.
-server.use express.json()
+server.use json strict:true
 
 # Set up session support.
-server.use express.cookieParser();
-server.use express.cookieSession secret: config.sessionSecret, cookie:maxAge:60*60*1000
-
-# Send OPTIONS response at this point.
-server.use (req, res, next) ->
-  if req.method is 'OPTIONS' then res.send() else next()
+server.use session key: 'session', keys: config.sessionKeys, signed: true
 
 # Import database schemas.
 server.db = require './schemas'
