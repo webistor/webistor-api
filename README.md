@@ -86,6 +86,7 @@ Run tests using `cake test` or `cake --watch test` to continuously test.
 
 * [Mocha](http://visionmedia.github.io/mocha/#getting-started): Test runner and describer
 * [Must](https://github.com/moll/js-must/blob/master/doc/API.md): BDD asserting library.
+* [Supertest](https://github.com/visionmedia/supertest): HTTP Assertion library.
 
 ### Planned features
 
