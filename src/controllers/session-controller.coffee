@@ -2,6 +2,7 @@ Controller = require './base/controller'
 Promise = require 'bluebird'
 _ = require 'lodash'
 AuthError = require '../classes/auth-error'
+ServerError = require './base/server-error'
 log = require 'node-logging'
 {User} = require '../schemas'
 
@@ -24,7 +25,7 @@ module.exports = class SessionController extends Controller
    * @return {Promise} A promise of a user mongo document.
   ###
   getUser: (req) ->
-    return Promise.reject "Not logged in." unless @isLoggedIn req
+    return Promise.reject new ServerError 404, "Not logged in." unless @isLoggedIn req
     Promise.promisify(User.findById, User) req.session.userId
 
   ###*
@@ -46,7 +47,7 @@ module.exports = class SessionController extends Controller
   ###
   ensureLogin: (req) ->
     return null if @isLoggedIn req
-    throw new Error "You are not logged in."
+    throw new ServerError 401, "You are not logged in."
 
   ###*
    * Ensure that the request mongoose query filters by author.
@@ -85,7 +86,7 @@ module.exports = class SessionController extends Controller
     else false
 
     # If we have no means to find the user.
-    return Promise.reject "No username or email address given." unless find
+    return Promise.reject new ServerError 401, "No username or email address given." unless find
 
     # Figure out by which means to authenticate the user.
     authType = if 'token' of req.body
@@ -95,7 +96,7 @@ module.exports = class SessionController extends Controller
     else false
 
     # If we have no means to authenticate the user.
-    return Promise.reject "No password or token given." unless authType
+    return Promise.reject new ServerError 401, "No password or token given." unless authType
 
     # We want the auth object out here.
     auth = null
@@ -119,27 +120,27 @@ module.exports = class SessionController extends Controller
 
       # Too many authentication attempts.
       if err.reason is AuthError.LOCKED
-        throw new Error "
+        throw new ServerError 401, "
           You have expended your authentication attempts. Please wait an hour and retry.
           This is a safety measure to protect your account from theft. If you were not the
           cause of this error message, please contact support."
 
       # Missing credentials.
       if err.reason is AuthError.MISSMATCH
-        throw new Error "
+        throw new ServerError 401, "
           Invalid username/email or password/token." + (if auth?.attempts > 2 then " "+"
           Please note that your account will be locked out after too many attempts and you
           will not be able to log in or use the password forgotten function for an hour." else '')
 
       # Expired authentication token.
       if err.reason is AuthError.MISSING and authType.method is 'authenticateToken'
-        throw new Error "
+        throw new ServerError 401, "
           The token you are using is not present on the server. In most cases this means
           that the token has expired. You can only use a login token for up to an hour
           after generating it."
 
       # Some other reason.
-      throw new Error "
+      throw new ServerError 401, "
         Something went wrong while attempting to log you in. Try again later. If this
         problem persists, please contact support."
 
@@ -151,6 +152,6 @@ module.exports = class SessionController extends Controller
    * @return {String} Status message.
   ###
   logout: (req) ->
-    throw new Error "User wasn't logged in." unless @isLoggedIn req
+    throw new ServerError 404, "User wasn't logged in." unless @isLoggedIn req
     delete req.session.userId
     return "Successfully logged out."

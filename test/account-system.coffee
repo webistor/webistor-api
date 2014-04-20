@@ -152,5 +152,5 @@ describe "Managing users", ->
     it "should not share sessions between agents", (done) ->
       supertest.agent server
       .get '/users/me'
-      .expect 401
+      .expect 404
       .end done
