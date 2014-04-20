@@ -20,7 +20,7 @@ module.exports = class Controller
 
     # Get the action. Respond with an error if it does not exist.
     action = @getAction actionName
-    return @sendError req, res, new ServerError 501, "Controller method not implemented." unless action
+    return @sendError req, res, new ServerError 501, "Controller::#{actionName} does not exist." unless action
 
     # Try to execute the action. If an error occurs, respond with the error.
     try
@@ -51,7 +51,7 @@ module.exports = class Controller
    * @return {Function} The middleware for Express.
   ###
   getSyncMiddleware: (actionName, args...) ->
-    throw new Error "Deprecated: SessionController.prototype.getSyncMiddleware"
+    throw new Error "Deprecated: Controller::getSyncMiddleware"
 
   ###*
    * Find the implementing controller method of the given name, and bind it to this.

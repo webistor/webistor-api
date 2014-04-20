@@ -83,35 +83,48 @@ module.exports = class SessionController extends Controller
       {username: req.body.username.toLowerCase()}
     else if 'email' of req.body
       {email: req.body.email.toLowerCase()}
+    else if 'login' of req.body
+      {$or: [{email: req.body.login}, {username: req.body.login}]}
     else false
 
     # If we have no means to find the user.
-    return Promise.reject new ServerError 401, "No username or email address given." unless find
+    return Promise.reject new ServerError 400, "No username or email address given." unless find
 
-    # Figure out by which means to authenticate the user.
-    authType = if 'token' of req.body
-      {method: 'authenticateToken', value: req.body.token}
-    else if 'password' of req.body
-      {method: 'authenticatePassword', value: req.body.password}
-    else false
-
-    # If we have no means to authenticate the user.
-    return Promise.reject new ServerError 401, "No password or token given." unless authType
-
-    # We want the auth object out here.
-    auth = null
-
-    # Find the user in the database and force-include the password.
+    # Find the user
     Promise.promisify(User.findOne, User) find, '+password'
+
+    # Ensure the user exists and fake hasing time if they don't.
+    .then (user) ->
+      new Promise (resolve, reject) ->
+        return resolve user if user
+        setTimeout (-> reject new AuthError "User not found.", AuthError.MISSMATCH), Math.random()*25 + 55
 
     # Authenticate the user.
     .then (user) =>
-      throw new AuthError "User not found.", AuthError.MISSMATCH unless user
-      auth = @authFactory.get(user)
-      return auth[authType.method] authType.value
+
+      # The password must match the rules defined in the database schema.
+      if req.body.password
+        method = 'authenticatePassword'
+        value = req.body.password
+        passwordRegex = User.schema.tree.password.match
+        throw new AuthError "Password out of bounds.", AuthError.MISSMATCH unless passwordRegex.test value
+
+      # The token must be 32 characters long.
+      else if req.body.token
+        method = 'authenticateToken'
+        value = req.body.token
+        throw new AuthError "Token out of bounds.", AuthError.MISSMATCH unless value.length is 32
+
+      # If we have no means to authenticate the user.
+      else throw new ServerError 400, "No password or token given."
+
+      # Create the auth object (in the above scope) and perform the authentication.
+      auth = @authFactory.get user
+      auth[method] value
+      .return auth
 
     # Store the users ID in their session and return the user object without password.
-    .then ->
+    .then (auth) ->
       req.session.userId = auth.user._id
       return _.omit auth.user, 'password'
 
@@ -125,22 +138,22 @@ module.exports = class SessionController extends Controller
           This is a safety measure to protect your account from theft. If you were not the
           cause of this error message, please contact support."
 
-      # Missing credentials.
+      # Invalid credentials.
       if err.reason is AuthError.MISSMATCH
         throw new ServerError 401, "
-          Invalid username/email or password/token." + (if auth?.attempts > 2 then " "+"
-          Please note that your account will be locked out after too many attempts and you
-          will not be able to log in or use the password forgotten function for an hour." else '')
+          Invalid username/email or password/token. Please note that your account will be
+          locked out after too many attempts and you will not be able to log in or use the
+          password forgotten function for an hour."
 
       # Expired authentication token.
-      if err.reason is AuthError.MISSING and authType.method is 'authenticateToken'
+      if err.reason is AuthError.MISSING
         throw new ServerError 401, "
           The token you are using is not present on the server. In most cases this means
           that the token has expired. You can only use a login token for up to an hour
           after generating it."
 
       # Some other reason.
-      throw new ServerError 401, "
+      throw new ServerError 500, "
         Something went wrong while attempting to log you in. Try again later. If this
         problem persists, please contact support."
 
