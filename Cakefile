@@ -22,12 +22,6 @@ reset = '\x1b[0m'
 red = '\x1b[0;31m'
 
 ###*
- * Docs
- * Generate Annotated Documentation.
-###
-task 'docs', 'generate documentation', -> docco()
-
-###*
  * Build
  * Builds Source. Can watch.
 ###
@@ -61,7 +55,7 @@ task 'clean', 'clean generated files', -> clean -> log ";)", green
  * Watch
  * Watch option for build, start or test.
 ###
-option '-w', '--watch', 'watch for changes during test or build'
+option '-w', '--watch', 'set build, start, or test in watching mode (ex: [cake -w test])'
 
 
 # Internal Functions
@@ -146,6 +140,7 @@ start = (argv, callback) ->
     callback = argv
     argv = {}
   options = ['lib/index.js']
+  log 'Running application', green
   launch 'node', options, callback
 
 # ## *nodemon*
@@ -211,10 +206,3 @@ mocha = (argv, callback) ->
     options.push 'spec'
 
   launch './node_modules/mocha/bin/_mocha', options, callback
-
-# ## *docco*
-#
-# **given** optional function as callback
-# **then** invoke launch passing docco command
-docco = (callback) ->
-  walk 'src', (err, files) -> launch 'docco', files, callback
