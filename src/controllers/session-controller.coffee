@@ -93,11 +93,11 @@ module.exports = class SessionController extends Controller
     # Find the user
     Promise.promisify(User.findOne, User) find, '+password'
 
-    # Ensure the user exists and fake hasing time if they don't.
+    # Ensure the user exists and fake hashing time if they don't.
     .then (user) ->
-      new Promise (resolve, reject) ->
-        return resolve user if user
-        setTimeout (-> reject new AuthError "User not found.", AuthError.MISSMATCH), Math.random()*25 + 55
+      return user if user
+      Promise.delay Math.random()*25 + 55
+      .throw new AuthError AuthError.MISSMATCH, "User not found."
 
     # Authenticate the user.
     .then (user) =>
@@ -107,18 +107,18 @@ module.exports = class SessionController extends Controller
         method = 'authenticatePassword'
         value = req.body.password
         passwordRegex = User.schema.tree.password.match
-        throw new AuthError "Password out of bounds.", AuthError.MISSMATCH unless passwordRegex.test value
+        throw new AuthError AuthError.MISSMATCH, "Password out of bounds." unless passwordRegex.test value
 
       # The token must be 32 characters long.
       else if req.body.token
         method = 'authenticateToken'
         value = req.body.token
-        throw new AuthError "Token out of bounds.", AuthError.MISSMATCH unless value.length is 32
+        throw new AuthError AuthError.MISSMATCH, "Token out of bounds." unless value.length is 32
 
       # If we have no means to authenticate the user.
       else throw new ServerError 400, "No password or token given."
 
-      # Create the auth object (in the above scope) and perform the authentication.
+      # Create the authentication object (in the above scope) and perform the authentication.
       auth = @authFactory.get user
       auth[method] value
       .return auth

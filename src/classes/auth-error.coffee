@@ -1,5 +1,7 @@
 module.exports = class AuthError extends Error
 
+  @Predicate: (reason) -> (err) -> err instanceof AuthError and err.reason is reason
+
   @UNKNOWN: 0
   @EXPIRED: 1
   @MISSMATCH: 2
@@ -8,6 +10,7 @@ module.exports = class AuthError extends Error
 
   reason: 0
 
-  constructor: (@message, @reason = @reason) ->
+  constructor: (reason..., @message) ->
     @name = "AuthError"
+    @reason = reason[0] if reason.length > 0
     Error.captureStackTrace this, AuthError
