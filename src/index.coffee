@@ -77,11 +77,13 @@ server.db.mongoose.connect config.database
 # Instantiate controllers.
 server.session = new SessionController new AuthFactory
 
-# Route: Set up session controller routes.
+# Route: Set up user system routes.
 server.get '/users/me', server.session.getMiddleware 'getUser'
 server.post '/users/me', server.session.getMiddleware 'login'
 server.delete '/users/me', server.session.getMiddleware 'logout'
+server.post '/users', server.session.getMiddleware 'register'
 server.get '/session/loginCheck', server.session.getMiddleware 'isLoggedIn'
+server.post '/session/nameCheck', server.session.getMiddleware 'usernameExists'
 
 # Shared middleware.
 ensureLogin = server.session.getMiddleware 'ensureLogin'

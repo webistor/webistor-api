@@ -123,13 +123,13 @@ describe "Managing users", ->
     before (done) -> User.create archer, done
     after (done) -> User.remove {}, done
 
-    it "should repond with value:false when doing a login check without a login", (done) ->
+    it "should repond with value:false when performing a login-check without a present session", (done) ->
       req.get '/session/loginCheck'
       .expect 200
       .expect value:false
       .end logError done
 
-    it "should respond with 404 when the 'me' resource is requested without a login", (done) ->
+    it "should respond with 404 when the 'me' resource is requested without a present session", (done) ->
       req.get '/users/me'
       .expect 404
       .end logError done
@@ -160,13 +160,13 @@ describe "Managing users", ->
         res.body.username.must.be archer.username
         done()
 
-    it "should repond with value:true when doing a login check with a login", (done) ->
+    it "should repond with value:true when performing a login-check with a present session", (done) ->
       agentArcher.get '/session/loginCheck'
       .expect 200
       .expect value:true
       .end logError done
 
-    it "should respond with the logged in user when the 'me' resource is requested with a login", (done) ->
+    it "should respond with the logged in user when the 'me' resource is requested with a present session", (done) ->
       agentArcher.get '/users/me'
       .expect 200
       .end onSuccess (res) ->
@@ -176,4 +176,11 @@ describe "Managing users", ->
     it "should not share sessions between agents", (done) ->
       agentBond.get '/users/me'
       .expect 404
+      .end logError done
+
+    it "should prevent users signing up while in alpha release state", (done) ->
+      config.releaseStage = 'alpha'
+      agentBond.post '/users'
+      .send bond
+      .expect 403
       .end logError done
