@@ -72,6 +72,9 @@ module.exports = class SessionController extends Controller
   ###*
    * Attempt to log a user in by reading their credentials from the request body.
    *
+   * In theory, this method should not need protection against bots by taking a number of
+   * security measures. This happens to provide users with a more friendly way to log in.
+   *
    * @param {http.IncomingMessage} req The Express request object.
    *
    * @return {Promise} A promise of a user document. Gets rejected with an appropriate
@@ -127,7 +130,7 @@ module.exports = class SessionController extends Controller
     # Store the users ID in their session and return the user object without password.
     .then (auth) ->
       req.session.userId = auth.user._id
-      return _.omit auth.user, 'password'
+      return _.omit auth.user.toObject(), 'password'
 
     # Generate a user-friendly error message.
     .catch AuthError, (err) ->
@@ -167,11 +170,8 @@ module.exports = class SessionController extends Controller
   ###
   usernameExists: (req) ->
     throw new ServerError 400, "No username given." unless req.body.username
-    User.findAsync {username:req.body.username}
-    .return false
-    .catch (ex) ->
-      console.log ex
-      return true
+    User.findOneAsync {username:req.body.username}
+    .then (user) -> user?
 
   ###*
    * Register a new user.
@@ -195,16 +195,16 @@ module.exports = class SessionController extends Controller
     user.validateAsync()
 
     # Proceed by checking if the username is taken or not.
-    .then -> @usernameExists req
+    .then => @usernameExists req
     .then (exists) -> throw new ServerError 409, "Username is taken." if exists
 
     # Proceed by checking if the user is already registered.
-    .then -> User.findAsync {email:user.email}
+    .then -> User.findOneAsync {email:user.email}
+    .then (user) -> throw new ServerError 409, "Email address is taken." if user?
 
-    # The user exists. #TODO: We can tell the client because we're protected by captcha.
-    .throw new ServerError 409, "A user is already registered using this email address."
-
-    .return "Not finished"
+    # Proceed to register the user.
+    .then -> user.saveAsync()
+    .spread (user) -> _.omit user.toObject(), 'password'
 
   ###*
    * Log a user out, removing them from their session.
