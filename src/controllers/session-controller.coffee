@@ -4,7 +4,8 @@ _ = require 'lodash'
 AuthError = require '../classes/auth-error'
 ServerError = require './base/server-error'
 log = require 'node-logging'
-{User} = require '../schemas'
+User = Promise.promisifyAll (require '../schemas').User
+config = require '../config'
 
 module.exports = class SessionController extends Controller
 
@@ -25,8 +26,8 @@ module.exports = class SessionController extends Controller
    * @return {Promise} A promise of a user mongo document.
   ###
   getUser: (req) ->
-    return Promise.reject new ServerError 404, "Not logged in." unless @isLoggedIn req
-    Promise.promisify(User.findById, User) req.session.userId
+    throw new ServerError 404, "Not logged in." unless @isLoggedIn req
+    User.findByIdAsync req.session.userId
 
   ###*
    * Return true if a user is logged in, false otherwise.
@@ -54,7 +55,7 @@ module.exports = class SessionController extends Controller
    *
    * @param {http.IncomingMessage} req The Express request object.
    * @param {null} res Not used by this method.
-   * @param {String} field ["author"] The field to filter on.
+   * @param {String} field ("author") The field to filter on.
    *
    * @return {null}
   ###
@@ -70,6 +71,9 @@ module.exports = class SessionController extends Controller
 
   ###*
    * Attempt to log a user in by reading their credentials from the request body.
+   *
+   * In theory, this method should not need protection against bots by taking a number of
+   * security measures. This happens to provide users with a more friendly way to log in.
    *
    * @param {http.IncomingMessage} req The Express request object.
    *
@@ -88,10 +92,10 @@ module.exports = class SessionController extends Controller
     else false
 
     # If we have no means to find the user.
-    return Promise.reject new ServerError 400, "No username or email address given." unless find
+    throw new ServerError 400, "No username or email address given." unless find
 
     # Find the user
-    Promise.promisify(User.findOne, User) find, '+password'
+    User.findOneAsync find, '+password'
 
     # Ensure the user exists and fake hashing time if they don't.
     .then (user) ->
@@ -126,7 +130,7 @@ module.exports = class SessionController extends Controller
     # Store the users ID in their session and return the user object without password.
     .then (auth) ->
       req.session.userId = auth.user._id
-      return _.omit auth.user, 'password'
+      return _.omit auth.user.toObject(), 'password'
 
     # Generate a user-friendly error message.
     .catch AuthError, (err) ->
@@ -156,6 +160,51 @@ module.exports = class SessionController extends Controller
       throw new ServerError 500, "
         Something went wrong while attempting to log you in. Try again later. If this
         problem persists, please contact support."
+
+  ###*
+   * Check for the existance of a username.
+   *
+   * @param {http.IncomingMessage} req The Express request object.
+   *
+   * @return {Promise} A promise of a boolean indicating whether the user was found (true) or not (false).
+  ###
+  usernameExists: (req) ->
+    throw new ServerError 400, "No username given." unless req.body.username
+    User.findOneAsync {username:req.body.username}
+    .then (user) -> user?
+
+  ###*
+   * Register a new user.
+   *
+   * @throws {ServerError} If the current release stage is not in open beta or post release.
+   *
+   * @param {http.IncomingMessage} req The Express request object.
+   *
+   * @return {Promise} A promise of the created user object.
+  ###
+  register: (req) ->
+
+    # Can only autonomously register during open beta or after release.
+    unless config.releaseStage in ['openBeta', 'postRelease']
+      throw new ServerError 403, "User registration is not allowed at this stage."
+
+    # Create the user object locally.
+    user = Promise.promisifyAll new User req.body
+
+    # Validate given data.
+    user.validateAsync()
+
+    # Proceed by checking if the username is taken or not.
+    .then => @usernameExists req
+    .then (exists) -> throw new ServerError 409, "Username is taken." if exists
+
+    # Proceed by checking if the user is already registered.
+    .then -> User.findOneAsync {email:user.email}
+    .then (user) -> throw new ServerError 409, "Email address is taken." if user?
+
+    # Proceed to register the user.
+    .then -> user.saveAsync()
+    .spread (user) -> _.omit user.toObject(), 'password'
 
   ###*
    * Log a user out, removing them from their session.
