@@ -107,6 +107,9 @@ server.db.Tag.before 'get', ensureOwnership
 server.db.Tag.before 'post', ensureOwnership
 server.db.Tag.before 'put', ensureOwnership
 server.db.Tag.before 'delete', ensureOwnership
+server.db.Tag.after 'get', server.tags.getMiddleware 'addNum'
+server.db.Tag.after 'post', server.tags.getMiddleware 'addNum'
+server.db.Tag.after 'put', server.tags.getMiddleware 'addNum'
 server.db.Tag.register server, '/tags'
 server.patch '/tags', ensureLogin
 server.patch '/tags', server.tags.getMiddleware 'patch'

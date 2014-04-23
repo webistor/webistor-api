@@ -4,6 +4,7 @@ config = require '../config'
 ServerError = require './base/server-error'
 log = require 'node-logging'
 Tag = Promise.promisifyAll (require '../schemas').Tag
+Entry = Promise.promisifyAll (require '../schemas').Entry
 
 module.exports = class TagController extends Controller
 
@@ -37,3 +38,26 @@ module.exports = class TagController extends Controller
 
     # Save all the tags.
     .then (tags) -> Promise.map tags, (tag) -> tag.saveAsync().get 0
+
+  ###*
+   * Add the number of entries which use this tag to the response body.
+   *
+   * @param {http.IncomingMessage} req The Express request object.
+   * @param {http.ServerResponse} res The Express response object.
+   *
+   * @return {Promise} A promise which resolves with null once the response has been modified.
+  ###
+  addNum: (req, res, as = 'num') ->
+
+    # The function that adds the number to a single tag.
+    addNum = (tag) ->
+      Entry.countAsync tags:tag._id
+      .then (num) -> tag.set 'num', num
+      .return null
+
+    # Add the number to a single tag.
+    return addNum res.locals.bundle unless res.locals.bundle instanceof Array
+
+    # Add the number to every tag in the incomming array.
+    Promise.map res.locals.bundle, (tag) -> addNum tag
+    .return null

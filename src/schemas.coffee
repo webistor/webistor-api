@@ -42,15 +42,19 @@ schemas =
     author: type: ObjectId, ref: 'user', index: true
     title:  type: String, trim: true, match: /^[\w\s]{1,255}$/
     color:  type: String, match: /^[0-9A-F]{6}$/
+    # Warning! The following property can stale and should therefore not be relied upon.
+    num:    type: Number, default: 0
 
 
 ##
-## MIDDLEWARE
+## EXTRA
 ##
 
-# Add user password hashing.
+# Add user password hashing middleware.
 schemas.User.pre 'save', Auth.Middleware.hashPassword()
 
+# This method can be relied upon to return the actual number of entries.
+schemas.Tag.method 'getNum', (cb) -> @model('tag').count {tags:@id}, cb
 
 ##
 ## MODELS
