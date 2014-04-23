@@ -10,3 +10,4 @@ module.exports =
   logLevel: 'debug'
   whitelist: ['localhost', 'webistor.net']
   sessionKeys: ['sesamopenu']
+  releaseStage: ['alpha', 'closedBeta', 'openBeta', 'postRelease'][1]
