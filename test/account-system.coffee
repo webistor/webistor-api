@@ -123,13 +123,13 @@ describe "Managing users", ->
     before (done) -> User.create archer, done
     after (done) -> User.remove {}, done
 
-    it "should repond with value:false when doing a login check without a login", (done) ->
+    it "should repond with value:false when performing a login-check without a present session", (done) ->
       req.get '/session/loginCheck'
       .expect 200
       .expect value:false
       .end logError done
 
-    it "should respond with 404 when the 'me' resource is requested without a login", (done) ->
+    it "should respond with 404 when the 'me' resource is requested without a present session", (done) ->
       req.get '/users/me'
       .expect 404
       .end logError done
@@ -158,22 +158,59 @@ describe "Managing users", ->
       .expect 200
       .end onSuccess (res) ->
         res.body.username.must.be archer.username
+        res.body.must.not.have.property 'password'
         done()
 
-    it "should repond with value:true when doing a login check with a login", (done) ->
+    it "should repond with value:true when performing a login-check with a present session", (done) ->
       agentArcher.get '/session/loginCheck'
-      .expect 200
       .expect value:true
       .end logError done
 
-    it "should respond with the logged in user when the 'me' resource is requested with a login", (done) ->
+    it "should respond with the logged in user when the 'me' resource is requested with a present session", (done) ->
       agentArcher.get '/users/me'
       .expect 200
       .end onSuccess (res) ->
         res.body.username.must.be archer.username
+        res.body.must.not.have.property 'password'
         done()
 
     it "should not share sessions between agents", (done) ->
       agentBond.get '/users/me'
       .expect 404
+      .end logError done
+
+    it "should respond with value:true when checking the existence of an existing username", (done) ->
+      req.post '/session/nameCheck'
+      .send username: archer.username
+      .expect value:true
+      .end logError done
+
+    it "should respond with value:false when checking the existence of a non-existing username", (done) ->
+      req.post '/session/nameCheck'
+      .send username: 'bob'
+      .expect value:false
+      .end logError done
+
+    it "should prevent users registration while in alpha release state", (done) ->
+      config.releaseStage = 'alpha'
+      agentBond.post '/users'
+      .send bond
+      .expect 403
+      .end logError done
+
+    it "should allow user registration while in public beta release state", (done) ->
+      config.releaseStage = 'openBeta'
+      agentBond.post '/users'
+      .send bond
+      .expect 200
+      .end onSuccess (res) ->
+        res.body.username.must.be bond.username
+        res.body.must.have.property '_id'
+        res.body.must.not.have.property 'password'
+        done()
+
+    it "should have registerred the user", (done) ->
+      req.post '/session/nameCheck'
+      .send username: bond.username
+      .expect value:true
       .end logError done

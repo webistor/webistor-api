@@ -77,11 +77,15 @@ server.db.mongoose.connect config.database
 # Instantiate controllers.
 server.session = new SessionController new AuthFactory
 
-# Route: Set up session controller routes.
+# Route: Set up user system routes.
 server.get '/users/me', server.session.getMiddleware 'getUser'
 server.post '/users/me', server.session.getMiddleware 'login'
 server.delete '/users/me', server.session.getMiddleware 'logout'
 server.get '/session/loginCheck', server.session.getMiddleware 'isLoggedIn'
+server.post '/session/nameCheck', server.session.getMiddleware 'usernameExists'
+
+# TODO: Protect this request with anti-botting measures.
+server.post '/users', server.session.getMiddleware 'register'
 
 # Shared middleware.
 ensureLogin = server.session.getMiddleware 'ensureLogin'
@@ -122,4 +126,4 @@ proxy = http.createServer (req) ->
 proxy.listen config.httpPort if config.httpPort
 
 # Export our servers.
-module.exports = {client, server, proxy}
+module.exports = {client, server, proxy} if config.debug
