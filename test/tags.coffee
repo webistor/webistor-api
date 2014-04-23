@@ -30,6 +30,14 @@ describe "The Tag model", ->
       num.must.be 10
       done()
 
+  it "#getNum()", (done) ->
+    Tag.findOne {}, onSuccess (tag) ->
+      tag.must.have.property 'getNum'
+      tag.getNum.must.be.a.function()
+      tag.getNum onSuccess (num) ->
+        num.must.be.a.number()
+        done()
+
 describe 'API:', ->
 
   req = supertest server
@@ -74,6 +82,7 @@ describe 'API:', ->
         res.body.must.be.an Array
         res.body.must.have.length 1
         res.body[0].must.have.property '_id'
+        res.body[0].must.have.property 'num'
         @tags = res.body
         done()
 
