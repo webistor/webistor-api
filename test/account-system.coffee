@@ -28,7 +28,7 @@ describe "The authentication class", ->
 
   before (done) ->
     Auth.EXPIRATION_DURATION = 200
-    User.create userTemplate, onSuccess (@user) => done()
+    User.remove {}, onSuccess => User.create userTemplate, onSuccess (@user) => done()
 
   after (done) ->
     Auth.EXPIRATION_DURATION = 1000*60*60
