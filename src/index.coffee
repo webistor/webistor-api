@@ -5,6 +5,7 @@ config = require './config'
 log = require 'node-logging'
 AuthFactory = require './classes/auth-factory'
 SessionController = require './controllers/session-controller'
+TagController = require './controllers/tag-controller'
 favicon = require 'static-favicon'
 {json} = require 'body-parser'
 session = require 'cookie-session'
@@ -76,6 +77,7 @@ server.db.mongoose.connect config.database
 
 # Instantiate controllers.
 server.session = new SessionController new AuthFactory
+server.tags = new TagController
 
 # Route: Set up user system routes.
 server.get '/users/me', server.session.getMiddleware 'getUser'
@@ -106,6 +108,8 @@ server.db.Tag.before 'post', ensureOwnership
 server.db.Tag.before 'put', ensureOwnership
 server.db.Tag.before 'delete', ensureOwnership
 server.db.Tag.register server, '/tags'
+server.patch '/tags', ensureLogin
+server.patch '/tags', server.tags.getMiddleware 'patch'
 
 # Start listening on the server port.
 server.listen config.serverPort if config.serverPort
