@@ -88,7 +88,8 @@ module.exports = class SessionController extends Controller
     else if 'email' of req.body
       {email: req.body.email.toLowerCase()}
     else if 'login' of req.body
-      {$or: [{email: req.body.login}, {username: req.body.login}]}
+      login = req.body.login.toLowerCase()
+      {$or: [{email: login}, {username: login}]}
     else false
 
     # If we have no means to find the user.
