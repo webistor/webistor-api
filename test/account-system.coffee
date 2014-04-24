@@ -3,7 +3,6 @@ config = require './_config'
 Auth = require '../src/classes/auth'
 {server} = require '../src'
 {User} = server.db
-{session} = server
 
 
 ##

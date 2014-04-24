@@ -5,6 +5,7 @@ config = require './config'
 log = require 'node-logging'
 AuthFactory = require './classes/auth-factory'
 SessionController = require './controllers/session-controller'
+EntryController = require './controllers/entry-controller'
 TagController = require './controllers/tag-controller'
 favicon = require 'static-favicon'
 {json} = require 'body-parser'
@@ -76,30 +77,32 @@ server.db = require './schemas'
 server.db.mongoose.connect config.database
 
 # Instantiate controllers.
-server.session = new SessionController new AuthFactory
-server.tags = new TagController
+server.sessionController = new SessionController new AuthFactory
+server.entryController = new EntryController
+server.tagController = new TagController
 
 # Route: Set up user system routes.
-server.get '/users/me', server.session.getMiddleware 'getUser'
-server.post '/users/me', server.session.getMiddleware 'login'
-server.delete '/users/me', server.session.getMiddleware 'logout'
-server.get '/session/loginCheck', server.session.getMiddleware 'isLoggedIn'
-server.post '/session/nameCheck', server.session.getMiddleware 'usernameExists'
+server.get '/users/me', server.sessionController.getMiddleware 'getUser'
+server.post '/users/me', server.sessionController.getMiddleware 'login'
+server.delete '/users/me', server.sessionController.getMiddleware 'logout'
+server.get '/session/loginCheck', server.sessionController.getMiddleware 'isLoggedIn'
+server.post '/session/nameCheck', server.sessionController.getMiddleware 'usernameExists'
 
 # TODO: Protect this request with anti-botting measures.
-server.post '/users', server.session.getMiddleware 'register'
+server.post '/users', server.sessionController.getMiddleware 'register'
 
 # Shared middleware.
-ensureLogin = server.session.getMiddleware 'ensureLogin'
-ensureOwnership = server.session.getMiddleware 'ensureOwnership'
+ensureLogin = server.sessionController.getMiddleware 'ensureLogin'
+ensureOwnership = server.sessionController.getMiddleware 'ensureOwnership'
 
 # Route: Set up entry REST routes.
-server.db.Entry.methods ['get', 'post', 'put', 'delete']
-server.db.Entry.before 'get', ensureOwnership
+server.db.Entry.methods ['post', 'put', 'delete']
 server.db.Entry.before 'post', ensureOwnership
 server.db.Entry.before 'put', ensureOwnership
 server.db.Entry.before 'delete', ensureOwnership
 server.db.Entry.register server, '/entries'
+server.get '/entries', ensureLogin
+server.get '/entries', server.entryController.getMiddleware 'search'
 
 # Route: Set up tag REST routes.
 server.db.Tag.methods ['get', 'post', 'put', 'delete']
@@ -107,12 +110,12 @@ server.db.Tag.before 'get', ensureOwnership
 server.db.Tag.before 'post', ensureOwnership
 server.db.Tag.before 'put', ensureOwnership
 server.db.Tag.before 'delete', ensureOwnership
-server.db.Tag.after 'get', server.tags.getMiddleware 'addNum'
-server.db.Tag.after 'post', server.tags.getMiddleware 'addNum'
-server.db.Tag.after 'put', server.tags.getMiddleware 'addNum'
+server.db.Tag.after 'get', server.tagController.getMiddleware 'addNum'
+server.db.Tag.after 'post', server.tagController.getMiddleware 'addNum'
+server.db.Tag.after 'put', server.tagController.getMiddleware 'addNum'
 server.db.Tag.register server, '/tags'
 server.patch '/tags', ensureLogin
-server.patch '/tags', server.tags.getMiddleware 'patch'
+server.patch '/tags', server.tagController.getMiddleware 'patch'
 
 # Start listening on the server port.
 server.listen config.serverPort if config.serverPort

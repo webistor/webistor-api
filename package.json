@@ -19,6 +19,7 @@
     "body-parser": "~1",
     "express": "~4",
     "lodash": "~2",
+    "mongodb": "*",
     "mongoose": "~3",
     "node-logging": "*",
     "node-restful": "*",

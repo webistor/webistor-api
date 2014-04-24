@@ -6,7 +6,7 @@
 
 * Install Node
   [From website](http://nodejs.org/)
-* Install MongoDB
+* Install MongoDB Version 2.6 or higher
   [From website](http://www.mongodb.org/)
 * Install Node Package Manager
   `sudo chown -R $USER /usr/local`

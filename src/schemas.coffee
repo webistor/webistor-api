@@ -33,7 +33,7 @@ schemas =
     groupShare:   type: [ObjectId], ref: 'group'
     publicShare:  type: Boolean, default: false
     title:        type: String, trim: true, match: /^.{1,255}$/
-    url:          type: String, index: true
+    url:          type: String
     description:  type: String
     tags:         type: [ObjectId], ref: 'tag'
 
@@ -52,6 +52,9 @@ schemas =
 
 # Add user password hashing middleware.
 schemas.User.pre 'save', Auth.Middleware.hashPassword()
+
+# Add text indexes for text-search support.
+schemas.Entry.index {title:'text', description:'text'}, {default_language: 'en'}
 
 # This method can be relied upon to return the actual number of entries.
 schemas.Tag.method 'getNum', (cb) -> @model('tag').count {tags:@id}, cb
