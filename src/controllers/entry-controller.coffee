@@ -71,7 +71,7 @@ module.exports = class EntryController extends Controller
       # .then (groups) -> authors.push id for id in users for users in groups.map (g) -> g.users
 
       # Once all the work is done.
-      Promise.all [friendsPromise, userPromise]
+      Promise.join friendsPromise, userPromise
 
       # Resolve with all unique author IDs. If none are present, set defaults.
       .spread (friends) ->
@@ -102,7 +102,7 @@ module.exports = class EntryController extends Controller
       conditions.push {tags:$all:tags} if tags.length > 0
 
     # Once all condition building has been done..
-    Promise.all [authorPromise, tagPromise]
+    Promise.join authorPromise, tagPromise
 
     # Execute the database query.
     .then ->

@@ -1,9 +1,11 @@
 # Webistor API - Version 0.4 Dev
 
-## Installing
+## Installing (Linux Debian)
 
 ### Prerequisites
 
+* Install build tools
+  `apt-get install build-essential g++`
 * Install Node
   [From website](http://nodejs.org/)
 * Install MongoDB Version 2.6 or higher
