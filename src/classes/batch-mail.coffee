@@ -1,6 +1,8 @@
 nodemailer = require 'nodemailer'
 Promise = require 'bluebird'
+log = require 'node-logging'
 emailTemplates = Promise.promisify require 'email-templates'
+Mail = require './mail'
 config = require '../config'
 
 module.exports = class BatchMail extends Mail
@@ -52,6 +54,11 @@ module.exports = class BatchMail extends Mail
    * If the function returns a Promise, its resolve-value will be waited for and used
    * instead.
    *
+   * Any method can be called inside the batch-handler, including setting templates or
+   * even sending the mail. It is not recommended to do either of these: Setting templates
+   * should be done via {@see BatchMail::template} as it is more efficient, and sending
+   * is done automatically by {@see BatchMail::send}.
+   *
    * @throws {Error} If called during a batch.
    *
    * @param {Function} callback The batch handler function.
@@ -98,16 +105,14 @@ module.exports = class BatchMail extends Mail
     .then -> emailTemplates Mail.TEMPLATE_DIRECTORY
     .then (template) -> Promise.promisify(template) name, true
     .then (batch) ->
-      @batch ->
-        Promise.try data
-        .bind this
-        .then (data) ->
-          return if data is null
+      @batch (recipient) ->
+        Promise.try data, recipient, this
+        .then (data) =>
+          return unless data?
           Promise.promisify(batch) data, null
-          .spread (html, text) ->
+          .spread (html, text) =>
             @text text
             @html html
-          .done()
       @template()
 
   ###*
@@ -124,7 +129,9 @@ module.exports = class BatchMail extends Mail
    *
    * @throws {Error} If called during a batch.
    *
-   * @return {Promise} A promise of an array of nodemailer response objects.
+   * @return {Promise} A promise if an an object with two keys:
+   *                   * `done`: An array of objects containing `email` and `value`.
+   *                   * `failed`: An array of objects containing `email` and `error`.
   ###
   send: ->
 
@@ -136,6 +143,9 @@ module.exports = class BatchMail extends Mail
 
     # Start batching.
     .then =>
+
+      # Log.
+      log.dbg "Starting batch-mail to #{@_to.length} recipients..."
 
       # Lock some methods.
       @batching = true
@@ -154,8 +164,20 @@ module.exports = class BatchMail extends Mail
       # Return the array of promises.
       return promises
 
-    # Resolve all promises.
-    .all()
+    # Wait for all promises to have settled their state.
+    .settle()
 
-    # When it's all done. Set batching back to false.
-    .tap => @batching = false
+    # When it's all done: Set batching back to false and build output.
+    .then (settled) =>
+
+      log.dbg "Completed batch-mail."
+
+      @batching = false
+      done = []
+      failed = []
+
+      for inspection, index in settled
+        if inspection.isFulfilled() then done.push {email: @_to[index], value: inspection.value()}
+        else failed.push {email: @_to[index], error: inspection.error()}
+
+      return {done, failed}

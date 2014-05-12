@@ -3,17 +3,15 @@ nodemailer = require 'nodemailer'
 Promise = require 'bluebird'
 emailTemplates = Promise.promisify require 'email-templates'
 config = require '../config'
+log = require 'node-logging'
 
 module.exports = class Mail
 
   # Constants.
-  @SENDMAIL_PATH: '/usr/sbin/sendmail'
   @TEMPLATE_DIRECTORY: path.resolve __dirname, '../templates/mail'
 
-  # Define the NodeMailer transport method used by this class.
-  @transport: Promise.promisifyAll nodemailer.createTransport 'sendmail',
-    path: @SENDMAIL_PATH
-    args: ['-t', '-i']
+  # Create the NodeMailer transport object.
+  @transport: Promise.promisifyAll nodemailer.createTransport config.mail.type, config.mail.options or {}
 
   ###*
    * Normalize recipients.
@@ -33,7 +31,7 @@ module.exports = class Mail
 
     # Normalize.
     return switch type
-      when 'array' then input.reduce (output, user) => output.concat @normalizeRecipients user.email or user
+      when 'array' then input.reduce ((a, b) => a.concat Mail.normalizeRecipients b.email or b), []
       when 'object' then @normalizeRecipients input.email
       when 'string' then input.trim().split /\s*[,;]\s*/
 
@@ -183,9 +181,13 @@ module.exports = class Mail
 
     # Send out the email.
     .then =>
+      log.dbg "Sending mail to #{@_to.join('; ')}"
       Mail.transport.sendMailAsync
         from: @_from
         to: @_to.join ','
         subject: @_subject
         text: @_text if @_text
         html: @_html if @_html
+      .then (res) =>
+        log.dbg "Done sending mail to #{@_to.join('; ')}"
+        return res

@@ -66,6 +66,15 @@ describe "Mail", ->
       mail._to[1].must.be 'b@example.com'
       mail._to[2].must.be 'c@example.com'
 
+    it "should allow setting email addresses recursively", ->
+      mail = new Mail
+      mail.to ['a@example.com', 'b@example.com; c@example.com']
+      mail._to.must.be.an Array
+      mail._to.must.have.length 3
+      mail._to[0].must.be 'a@example.com'
+      mail._to[1].must.be 'b@example.com'
+      mail._to[2].must.be 'c@example.com'
+
   describe "templating", ->
 
     it "should be able to generate body from templates", (done) ->
@@ -97,9 +106,9 @@ describe "Mail", ->
       @slow 1000*10
       mail = new Mail mailTemplate.from, mailTemplate.to, mailTemplate.subject
       mail.body mailTemplate.body
-      mail.send().done (res) ->
-        res.must.have.property 'messageId'
-        done()
+      mail.send()
+      .then (res) -> res.must.have.property 'messageId'
+      .done done
 
     it "should transfer HTML messages", (done) ->
       mail = new Mail mailTemplate.from, mailTemplate.to, mailTemplate.subject
