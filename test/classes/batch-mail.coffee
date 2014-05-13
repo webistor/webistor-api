@@ -61,7 +61,6 @@ describe "BatchMail", ->
         @body "This is a test mail"
       .send()
       .then (result) ->
-        console.log util.inspect result, depth:10
         result.done.must.have.length 2
         result.done[0].email.must.be 'aldwin.vlasblom@gmail.com'
         result.done[0].value.must.have.property 'messageId'

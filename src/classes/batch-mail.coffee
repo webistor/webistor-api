@@ -81,8 +81,8 @@ module.exports = class BatchMail extends Mail
    * @param {String} name The name of an email template.
    *
    * @param {Function} data A function like the batch-handler ({@see BatchMail::batch})
-   *                        which is expected to return (or promise) the data for the
-   *                        template for an indivdual recipient.
+   *                        which is expected to return (or promise) the template-data for
+   *                        the indivdual recipient.
    *
    * @chainable
   ###
@@ -129,7 +129,7 @@ module.exports = class BatchMail extends Mail
    *
    * @throws {Error} If called during a batch.
    *
-   * @return {Promise} A promise if an an object with two keys:
+   * @return {Promise} A promise of an object with two keys:
    *                   * `done`: An array of objects containing `email` and `value`.
    *                   * `failed`: An array of objects containing `email` and `error`.
   ###

@@ -33,7 +33,7 @@ describe "Mail", ->
       .from mailTemplate.from
       .to mailTemplate.to
       .subject mailTemplate.subject
-      .body mailTemplate.body
+      .text mailTemplate.body
       mail._from.must.be "#{mailTemplate.from}@#{config.domainName}"
       mail._to.must.be.an Array
       mail._to.must.have.length 1
@@ -91,13 +91,13 @@ describe "Mail", ->
 
     it "should be possible", (done) ->
       mail = new Mail mailTemplate.from, mailTemplate.to, mailTemplate.subject
-      mail.body mailTemplate.body
+      mail.text mailTemplate.body
       mail.send()
       done()
 
     it "should reach multiple addresses", (done) ->
       mail = new Mail mailTemplate.from, ['aldwin.vlasblom@gmail.com', 'aldwin@tuxion.nl'], 'Test Multiple'
-      mail.body mailTemplate.body
+      mail.text mailTemplate.body
       mail.send()
       done()
 
@@ -105,7 +105,7 @@ describe "Mail", ->
       @timeout 1000*60*2
       @slow 1000*10
       mail = new Mail mailTemplate.from, mailTemplate.to, mailTemplate.subject
-      mail.body mailTemplate.body
+      mail.text mailTemplate.body
       mail.send()
       .then (res) -> res.must.have.property 'messageId'
       .done done

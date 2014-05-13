@@ -18,7 +18,7 @@ module.exports = class Mail
    *
    * When given a string, a comma-separated list of email addresses is assumed. When given
    * an object its `email` property will be used. When given an array, every value is
-   * normalized and concatenated.
+   * normalized and any sub-arrays are flattened.
    *
    * @param {Object} input The recipients to be normalized.
    *
@@ -54,16 +54,18 @@ module.exports = class Mail
    * @param {String} from {@see Mail::from}
    * @param {Array} to {@see Mail::to}
    * @param {String} subject {@see Mail::subject}
-   * @param {String} body {@see Mail::body}
+   * @param {String} text {@see Mail::text}
+   * @param {String} html {@see Mail::html}
    *
    * @return {Mail}
   ###
-  constructor: (from, to, subject, body) ->
+  constructor: (from, to, subject, text, html) ->
     @_to = []
     @from from if from
     @to to if to
     @subject subject if subject
-    @body body if body
+    @text text if text
+    @html html if html
 
   ###*
    * Set the sender of the email.
@@ -121,18 +123,6 @@ module.exports = class Mail
     return this
 
   ###*
-   * Set both html and text body.
-   *
-   * @type {String} body
-   *
-   * @chainable
-  ###
-  body: (body) ->
-    @text body
-    @html body
-    return this
-
-  ###*
    * Set template name and template data which will be used to generate a template upon sending the mail.
    *
    * When passed no name or data, the template is un-set.
@@ -144,8 +134,7 @@ module.exports = class Mail
    * @chainable
   ###
   template: (name, data) ->
-    if name and data then @_template = name:name, data:data
-    else @_template = null
+    @_template = if name and data then {name, data} else null
     return this
 
   ###*
