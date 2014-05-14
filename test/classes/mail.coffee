@@ -97,7 +97,7 @@ describe "Mail", ->
         mail._text.must.contain "**#{mailTemplate.body}**"
       .done done
 
-  describe "sending", ->
+  describe.skip "sending", ->
 
     it "should be possible", ->
       mail = new Mail mailTemplate.from, mailTemplate.to, mailTemplate.subject
@@ -111,7 +111,7 @@ describe "Mail", ->
       mail.send()
       return
 
-    it.only "should get an answer in under 30 seconds", (done) ->
+    it "should get an answer in under 30 seconds", (done) ->
       @timeout 1000*30
       @slow 1000*2
       mail = new Mail mailTemplate.from, mailTemplate.to, mailTemplate.subject

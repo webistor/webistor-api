@@ -225,9 +225,9 @@ module.exports = class Mail
       # Send the mail.
       Mail.transport.sendMailAsync
         from: @_from.format()
-        to: @_to.map (email) -> email.format() if @_to
-        cc: @_cc.map (email) -> email.format() if @_cc
-        bcc: @_bcc.map (email) -> email.format() if @_bcc
+        to: (@_to.map (email) -> email.format()) if @_to
+        cc: (@_cc.map (email) -> email.format()) if @_cc
+        bcc: (@_bcc.map (email) -> email.format()) if @_bcc
         subject: @_subject
         text: @_text if @_text
         html: @_html if @_html
