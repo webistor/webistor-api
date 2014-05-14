@@ -97,31 +97,51 @@ describe "Mail", ->
         mail._text.must.contain "**#{mailTemplate.body}**"
       .done done
 
-  describe.skip "sending", ->
+  describe "sending", ->
 
-    it "should be possible", (done) ->
+    it "should be possible", ->
       mail = new Mail mailTemplate.from, mailTemplate.to, mailTemplate.subject
-      mail.text mailTemplate.body
+      mail.text "should be possible"
       mail.send()
-      done()
+      return
 
-    it "should reach multiple addresses", (done) ->
+    it "should reach multiple addresses", ->
       mail = new Mail mailTemplate.from, ['aldwin.vlasblom@gmail.com', 'aldwin@tuxion.nl'], 'Test Multiple'
-      mail.text mailTemplate.body
+      mail.text "should reach multiple addresses"
       mail.send()
-      done()
+      return
 
-    it.skip "should get an answer within two minutes", (done) ->
-      @timeout 1000*60*2
-      @slow 1000*10
+    it.only "should get an answer in under 30 seconds", (done) ->
+      @timeout 1000*30
+      @slow 1000*2
       mail = new Mail mailTemplate.from, mailTemplate.to, mailTemplate.subject
-      mail.text mailTemplate.body
+      mail.text "should get an answer in under 30 seconds"
       mail.send()
       .then (res) -> res.must.have.property 'messageId'
       .done done
 
-    it "should transfer HTML messages", (done) ->
+    it "should transfer HTML messages", ->
       mail = new Mail mailTemplate.from, mailTemplate.to, mailTemplate.subject
-      mail.html "<ul><li><b>#{mailTemplate.body}</b></li></ul>"
+      mail.html "<ul><li><b>should transfer HTML messages</b></li></ul>"
       mail.send()
-      done()
+      return
+
+    it "should respect cc header", ->
+      mail = (new Mail)
+      .from mailTemplate.from
+      .cc mailTemplate.to
+      .subject mailTemplate.subject
+      .text "should respect cc header"
+      mail._cc.must.have.length 1
+      mail.send()
+      return
+
+    it "should respect bcc header", ->
+      mail = (new Mail)
+      .from mailTemplate.from
+      .bcc mailTemplate.to
+      .subject mailTemplate.subject
+      .text "should respect bcc header"
+      mail._bcc.must.have.length 1
+      mail.send()
+      return

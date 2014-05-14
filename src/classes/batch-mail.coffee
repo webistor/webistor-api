@@ -153,9 +153,12 @@ module.exports = class BatchMail extends Mail
       # Call the batch handler and send an email for every recipient.
       promises = []
       for recipient in @_to
-        mail = new Mail @_from, recipient, @_subject
-        mail.text @_text
-        mail.html @_html
+        mail = (new Mail)
+        .from @_from
+        .recipients 'to', [recipient]
+        .subject @_subject
+        .text @_text
+        .html @_html
         p = Promise.try @_batch, recipient, mail
         .bind mail
         .then mail.send

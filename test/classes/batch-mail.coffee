@@ -50,8 +50,8 @@ describe "BatchMail", ->
 
     it "should execute batch script and send individual mails", (done) ->
 
-      @timeout 1000*60*5
-      @slow 1000*10
+      @timeout 1000*10
+      @slow 1000*2
 
       mail = (new BatchMail)
       .from 'bob'

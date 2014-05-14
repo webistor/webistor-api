@@ -24,6 +24,8 @@ module.exports = class Mail
   _text:     null
   _html:     null
   _to:       null
+  _cc:       null
+  _bcc:      null
   _template: null
 
   ###*
@@ -41,6 +43,8 @@ module.exports = class Mail
   ###
   constructor: (from, to, subject, text, html) ->
     @_to = []
+    @_cc = []
+    @_bcc = []
     @from from if from
     @to to if to
     @subject subject if subject
@@ -87,14 +91,48 @@ module.exports = class Mail
     return this
 
   ###*
-   * Add recipients to this mailer.
+   * Add recipients to the To-header.
    *
    * @param {Object} recipients The recipients. Normalized by {@see EmailAddress.create}.
    *
    * @chainable
   ###
   to: (recipients) ->
-    @_to.push email for email in EmailAddress.create recipients when not @_to.some (to) -> to.equals email
+    @recipients 'to', EmailAddress.create recipients
+
+  ###*
+   * Add recipients to the Cc-header.
+   *
+   * @param {Object} recipients The recipients. Normalized by {@see EmailAddress.create}.
+   *
+   * @chainable
+  ###
+  cc: (recipients) ->
+    @recipients 'cc', EmailAddress.create recipients
+
+  ###*
+   * Add recipients to the Bcc-header.
+   *
+   * @param {Object} recipients The recipients. Normalized by {@see EmailAddress.create}.
+   *
+   * @chainable
+  ###
+  bcc: (recipients) ->
+    @recipients 'bcc', EmailAddress.create recipients
+
+  ###*
+   * Add recipients to a specific header.
+   *
+   * Any recipients that are already present in the header are ignored.
+   *
+   * @param {String} headerName Name of the header. One of: "to", "cc", "bcc"
+   * @param {[EmailAddress]} recipients An array of EmailAddress objects.
+   *
+   * @chainable
+  ###
+  recipients: (headerName, recipients) ->
+    header = @["_#{headerName}"]
+    header.push email for email in recipients when not header.some (a) -> a.equals email
     return this
 
   ###*
@@ -176,19 +214,20 @@ module.exports = class Mail
     # Send out the email.
     .then =>
 
-      # Filter out invalid email addresses.
-      to = @_to.filter (email) ->
-        return true if email.isValid()
-        log.dbg "Removing invalid recipient: '#{email.getAddress()}'"
-        return false
+      # Throw if there are no recipients.
+      throw new Error "No recipients" unless @_to? or @_cc? or @_bcc?
 
-      # Throw an error of no recipients remain.
-      throw new Error "No valid recipients are set." if to.length is 0
+      # Throw if there are any invalid recipients.
+      throw new Error "Invlid recipient" if @_to? and @_to.some (email) -> not email.isValid()
+      throw new Error "Invlid recipient" if @_cc? and @_cc.some (email) -> not email.isValid()
+      throw new Error "Invlid recipient" if @_bcc? and @_bcc.some (email) -> not email.isValid()
 
       # Send the mail.
       Mail.transport.sendMailAsync
         from: @_from.format()
-        bcc: to.map (email) -> email.format()
+        to: @_to.map (email) -> email.format() if @_to
+        cc: @_cc.map (email) -> email.format() if @_cc
+        bcc: @_bcc.map (email) -> email.format() if @_bcc
         subject: @_subject
         text: @_text if @_text
         html: @_html if @_html
