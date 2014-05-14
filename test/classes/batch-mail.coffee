@@ -58,13 +58,13 @@ describe "BatchMail", ->
       .to ['aldwin.vlasblom@gmail.com', 'aldwin@tuxion.nl', 'doomed-to-fail']
       .batch (recipient) ->
         @subject "Dear #{recipient}"
-        @body "This is a test mail"
+        @text "This is a test mail"
       .send()
       .then (result) ->
         result.done.must.have.length 2
-        result.done[0].email.must.be 'aldwin.vlasblom@gmail.com'
-        result.done[0].value.must.have.property 'messageId'
+        result.done[0].email.getAddress().must.be 'aldwin.vlasblom@gmail.com'
+        result.done[0].response.must.have.property 'messageId'
         result.failed.must.have.length 1
-        result.failed[0].email.must.be 'doomed-to-fail'
+        result.failed[0].email.getAddress().must.be 'doomed-to-fail'
         result.failed[0].must.have.property 'error'
       .done -> done()

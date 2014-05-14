@@ -4,36 +4,16 @@ Promise = require 'bluebird'
 emailTemplates = Promise.promisify require 'email-templates'
 config = require '../config'
 log = require 'node-logging'
+EmailAddress = require './email-address'
 
 module.exports = class Mail
 
   # Constants.
   @TEMPLATE_DIRECTORY: path.resolve __dirname, '../templates/mail'
+  @R_SPLIT_ADDRESSES: /\s*[,;]\s*/
 
   # Create the NodeMailer transport object.
   @transport: Promise.promisifyAll nodemailer.createTransport config.mail.type, config.mail.options or {}
-
-  ###*
-   * Normalize recipients.
-   *
-   * When given a string, a comma-separated list of email addresses is assumed. When given
-   * an object its `email` property will be used. When given an array, every value is
-   * normalized and any sub-arrays are flattened.
-   *
-   * @param {Object} input The recipients to be normalized.
-   *
-   * @return {[String]} An array of trimmed email addresses.
-  ###
-  @normalizeRecipients: (input) ->
-
-    # Figure out the input type.
-    type = if input instanceof Array then 'array' else typeof input
-
-    # Normalize.
-    return switch type
-      when 'array' then input.reduce ((a, b) => a.concat Mail.normalizeRecipients b.email or b), []
-      when 'object' then @normalizeRecipients input.email
-      when 'string' then input.trim().split /\s*[,;]\s*/
 
   ##
   ## CLASS MEMBERS
@@ -41,8 +21,8 @@ module.exports = class Mail
 
   _from:     "bot@#{config.domainName}"
   _subject:  "Message from #{config.domainName}"
-  _text:     'Keep cool.'
-  _html:     '<b>Keep cool.</b>'
+  _text:     null
+  _html:     null
   _to:       null
   _template: null
 
@@ -70,26 +50,51 @@ module.exports = class Mail
   ###*
    * Set the sender of the email.
    *
-   * If the "@domain"-part is omitted in the address, the configured domain name will
-   * automatically be appended.
+   * The sender may be given as a mere name. If so, this function will intelligently
+   * generate the email address based on config.domainName:
    *
-   * @param {String} sender The name or email address of the sender.
+   * ```coffeescript
+   * m = new Mail
+   * m.from "Bob"
+   * m._from.address == "Bob <bob@example.com>"
+   * ```
+   *
+   * @param {String|Object} sender The name or email address of the sender, or a user object.
    *
    * @chainable
   ###
   from: (sender) ->
-    @_from = if '@' in sender then sender else "#{sender}@#{config.domainName}"
+
+    # We got an already created instance.
+    if sender instanceof EmailAddress
+      @_from = sender
+      return this
+
+    # Normalize user (or user-like) object.
+    unless typeof sender is 'string'
+      sender = if sender.username? then "#{sender.username} <#{sender.email}>" else sender.email
+
+    # Normalize string without address.
+    unless '@' in sender
+      address = sender.replace(/[^\w]/g, '.').replace(/^\.+/, '').replace(/\.+$/, '').toLowerCase()
+      address = "#{address}@#{config.domainName}"
+      sender = "#{sender} <#{address}>"
+
+    # Create EmailAddress.
+    @_from = EmailAddress.create(sender)[0]
+
+    # Chain.
     return this
 
   ###*
    * Add recipients to this mailer.
    *
-   * @param {Object} recipients The recipients. Normalized by {@see Mail.normalizeRecipients}.
+   * @param {Object} recipients The recipients. Normalized by {@see EmailAddress.create}.
    *
    * @chainable
   ###
   to: (recipients) ->
-    @_to.push email for email in Mail.normalizeRecipients(recipients) when email not in @_to
+    @_to.push email for email in EmailAddress.create recipients when not @_to.some (to) -> to.equals email
     return this
 
   ###*
@@ -170,13 +175,20 @@ module.exports = class Mail
 
     # Send out the email.
     .then =>
-      log.dbg "Sending mail to #{@_to.join('; ')}"
+
+      # Filter out invalid email addresses.
+      to = @_to.filter (email) ->
+        return true if email.isValid()
+        log.dbg "Removing invalid recipient: '#{email.getAddress()}'"
+        return false
+
+      # Throw an error of no recipients remain.
+      throw new Error "No valid recipients are set." if to.length is 0
+
+      # Send the mail.
       Mail.transport.sendMailAsync
-        from: @_from
-        to: @_to.join ','
+        from: @_from.format()
+        bcc: to.map (email) -> email.format()
         subject: @_subject
         text: @_text if @_text
         html: @_html if @_html
-      .then (res) =>
-        log.dbg "Done sending mail to #{@_to.join('; ')}"
-        return res

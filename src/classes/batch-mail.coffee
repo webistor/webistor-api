@@ -130,7 +130,7 @@ module.exports = class BatchMail extends Mail
    * @throws {Error} If called during a batch.
    *
    * @return {Promise} A promise of an object with two keys:
-   *                   * `done`: An array of objects containing `email` and `value`.
+   *                   * `done`: An array of objects containing `email` and `response`.
    *                   * `failed`: An array of objects containing `email` and `error`.
   ###
   send: ->
@@ -177,7 +177,7 @@ module.exports = class BatchMail extends Mail
       failed = []
 
       for inspection, index in settled
-        if inspection.isFulfilled() then done.push {email: @_to[index], value: inspection.value()}
+        if inspection.isFulfilled() then done.push {email: @_to[index], response: inspection.value()}
         else failed.push {email: @_to[index], error: inspection.error()}
 
       return {done, failed}

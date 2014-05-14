@@ -14,11 +14,12 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
+    "address-rfc2822": "0.0.2",
     "bcrypt": "~0.7",
     "bluebird": "~1",
     "body-parser": "~1",
     "cookie-session": "~1",
-    "email-templates": "^0.1.8",
+    "email-templates": "~0.1",
     "express": "~4",
     "lodash": "~2",
     "mongodb": "*",
@@ -27,6 +28,7 @@
     "node-restful": "*",
     "nodemailer": "~0.6",
     "rand-token": "~0.2",
+    "rfc822-validate": "~1",
     "serve-static": "~1",
     "static-favicon": "~1"
   },

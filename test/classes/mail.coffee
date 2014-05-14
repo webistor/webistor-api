@@ -1,7 +1,11 @@
 path = require 'path'
 config = require '../_config'
 Mail = require '../../src/classes/mail'
+EmailAddress = require '../../src/classes/email-address'
 {User} = require '../../src/schemas'
+
+# Test email address first.
+require "./email-address"
 
 Mail.TEMPLATE_DIRECTORY = path.resolve __dirname, '../templates/mail'
 
@@ -18,14 +22,55 @@ describe "Mail", ->
     subject: 'Test subject'
     body: 'Test body'
 
+  describe "::from", ->
+
+    it "should create an EmailAddress", ->
+      mail = new Mail
+      mail.from "bob@example.com"
+      mail._from.must.be.an EmailAddress
+
+    it "should not touch already valid input", ->
+      mail = new Mail
+      mail.from "bob@example.com"
+      mail._from.getAddress().must.be "bob@example.com"
+
+    it "should use username and email when present in the given object", ->
+      mail = new Mail
+      mail.from {username: "Bob", email: "bob@example.com"}
+      mail._from.getAddress().must.be "bob@example.com"
+      mail._from.getName().must.be "Bob"
+
+    it "should create an email address when not given", ->
+      mail = new Mail
+      mail.from "Bob"
+      mail._from.getAddress().must.be "bob@#{config.domainName}"
+      mail._from.getName().must.be "Bob"
+
+  describe "::to", ->
+
+    it "should normalize addresses", ->
+      mail = new Mail
+      mail.to "Bob <bob@example.com>"
+      mail._to.must.be.an Array
+      mail._to[0].must.be.an EmailAddress
+      mail._to[0].getAddress().must.be "bob@example.com"
+      mail._to[0].getName().must.be "Bob"
+
+    it "should allow adding addresses in batches", ->
+      mail = new Mail
+      mail.to "bob@example.com"
+      mail.to "ben@example.com"
+      mail._to.must.have.length 2
+      mail.to "bob@example.com"
+      mail._to.must.have.length 2
+
   describe "class interactions", ->
 
     it "should allow setting options through the constructor", ->
       mail = new Mail mailTemplate.from, mailTemplate.to, mailTemplate.subject
-      mail._from.must.be "#{mailTemplate.from}@#{config.domainName}"
       mail._to.must.be.an Array
       mail._to.must.have.length 1
-      mail._to[0].must.be mailTemplate.to
+      mail._to[0].getAddress().must.be mailTemplate.to
       mail._subject.must.be mailTemplate.subject
 
     it "should allow setting options through method-chaining", ->
@@ -34,46 +79,11 @@ describe "Mail", ->
       .to mailTemplate.to
       .subject mailTemplate.subject
       .text mailTemplate.body
-      mail._from.must.be "#{mailTemplate.from}@#{config.domainName}"
       mail._to.must.be.an Array
       mail._to.must.have.length 1
-      mail._to[0].must.be mailTemplate.to
+      mail._to[0].getAddress().must.be mailTemplate.to
       mail._subject.must.be mailTemplate.subject
       mail._text.must.be mailTemplate.body
-
-  describe "::to", ->
-
-    userTemplate =
-      email: 'test@example.com'
-      username: 'test'
-      password: 'suchpassword'
-
-    before (done) -> User.remove {}, onSuccess => User.create userTemplate, onSuccess (@user) => done()
-    after (done) -> User.remove {}, done
-
-    it "should allow setting recipients through User objects", ->
-      bob = @user
-      mail = new Mail
-      mail.to bob
-      mail._to[0].must.be bob.email
-
-    it "should allow setting multiple recipients through comma or semi-colon separated values", ->
-      mail = new Mail
-      mail.to ' a@example.com, b@example.com   ;c@example.com   '
-      mail._to.must.be.an Array
-      mail._to.must.have.length 3
-      mail._to[0].must.be 'a@example.com'
-      mail._to[1].must.be 'b@example.com'
-      mail._to[2].must.be 'c@example.com'
-
-    it "should allow setting email addresses recursively", ->
-      mail = new Mail
-      mail.to ['a@example.com', 'b@example.com; c@example.com']
-      mail._to.must.be.an Array
-      mail._to.must.have.length 3
-      mail._to[0].must.be 'a@example.com'
-      mail._to[1].must.be 'b@example.com'
-      mail._to[2].must.be 'c@example.com'
 
   describe "templating", ->
 
@@ -101,7 +111,7 @@ describe "Mail", ->
       mail.send()
       done()
 
-    it "should get an answer within two minutes", (done) ->
+    it.skip "should get an answer within two minutes", (done) ->
       @timeout 1000*60*2
       @slow 1000*10
       mail = new Mail mailTemplate.from, mailTemplate.to, mailTemplate.subject
