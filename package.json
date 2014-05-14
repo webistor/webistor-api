@@ -14,19 +14,23 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
+    "address-rfc2822": "0.0.2",
     "bcrypt": "~0.7",
     "bluebird": "~1",
     "body-parser": "~1",
+    "cookie-session": "~1",
+    "email-templates": "~0.1",
     "express": "~4",
     "lodash": "~2",
     "mongodb": "*",
     "mongoose": "~3",
     "node-logging": "*",
     "node-restful": "*",
+    "nodemailer": "~0.6",
     "rand-token": "~0.2",
-    "cookie-session": "~1",
-    "static-favicon": "~1",
-    "serve-static": "~1"
+    "rfc822-validate": "~1",
+    "serve-static": "~1",
+    "static-favicon": "~1"
   },
   "devDependencies": {
     "must": "~0.11",

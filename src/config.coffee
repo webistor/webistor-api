@@ -11,3 +11,9 @@ module.exports =
   whitelist: ['localhost', 'webistor.net']
   sessionKeys: ['sesamopenu']
   releaseStage: ['alpha', 'closedBeta', 'openBeta', 'postRelease'][1]
+
+  # NodeMailer transport options.
+  # See: https://github.com/andris9/Nodemailer#setting-up-a-transport-method
+  mail:
+    type: 'sendmail'
+    options: path: '/usr/sbin/sendmail'
