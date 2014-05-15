@@ -17,3 +17,6 @@ module.exports =
   mail:
     type: 'sendmail'
     options: path: '/usr/sbin/sendmail'
+
+  # An array of usernames which users are not allowed to take.
+  reservedUserNames: ['me']

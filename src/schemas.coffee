@@ -3,7 +3,7 @@
 {ObjectId} = Schema.Types
 Auth = require './classes/auth'
 config = require './config'
-
+validateEmail = require 'rfc822-validate'
 
 ##
 ## SCHEMA DEFINITIONS
@@ -14,7 +14,9 @@ schemas =
 
   # The User schema.
   User: Schema
-    email:    type: String, required: true, unique: true, lowercase: true, match: /^.{2,256}?@[^@]{2,256}$/
+    email:    type: String, required: true, unique: true, lowercase: true, validate: [
+      validateEmail, "given email address is not valid"
+    ]
     username: type: String, required: true, unique: true, lowercase: true, match: /^[\w-_]{4,48}$/
     password: type: String, required: true, select: false, match: /^.{4,48}$/
     friends:  type: [ObjectId], ref: 'user'
