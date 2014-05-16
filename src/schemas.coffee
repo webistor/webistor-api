@@ -1,4 +1,4 @@
-{mongoose, model} = require 'node-restful'
+mongoose = require 'mongoose'
 {Schema} = mongoose
 {ObjectId} = Schema.Types
 Auth = require './classes/auth'
@@ -13,7 +13,7 @@ validateEmail = require 'rfc822-validate'
 schemas =
 
   # The User schema.
-  User: Schema
+  User: new Schema
     email:    type: String, required: true, unique: true, lowercase: true, validate: [
       validateEmail, "given email address is not valid"
     ]
@@ -22,12 +22,12 @@ schemas =
     friends:  type: [ObjectId], ref: 'user'
 
   # The Group schema.
-  Group: Schema
+  Group: new Schema
     author:  type: ObjectId, ref: 'user', required: true, index: true
     members: type: [ObjectId], ref: 'user'
 
   # The Entry schema.
-  Entry: Schema
+  Entry: new Schema
     author:       type: ObjectId, ref: 'user', required: true, index: true
     created:      type: Date, default: Date.now
     lastModified: type: Date, default: Date.now
@@ -40,7 +40,7 @@ schemas =
     tags:         type: [ObjectId], ref: 'tag'
 
   # The Tag schema.
-  Tag: Schema
+  Tag: new Schema
     author: type: ObjectId, ref: 'user', index: true
     title:  type: String, trim: true, match: /^[\w\s]{1,255}$/
     color:  type: String, match: /^[0-9A-F]{6}$/
@@ -67,5 +67,5 @@ schemas.Tag.method 'getNum', (cb) -> @model('tag').count {tags:@id}, cb
 
 # Create and export models.
 models = {mongoose}
-models[key] = model key.toLowerCase(), schema for own key, schema of schemas
+models[key] = mongoose.model key.toLowerCase(), schema for own key, schema of schemas
 module.exports = models

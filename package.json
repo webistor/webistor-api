@@ -15,6 +15,8 @@
   "private": true,
   "dependencies": {
     "address-rfc2822": "0.0.2",
+    "baucis": "~1",
+    "baucis-access": "git://github.com/Tuxion/baucis-access.git#master",
     "bcrypt": "~0.7",
     "bluebird": "~1",
     "body-parser": "~1",
@@ -25,7 +27,6 @@
     "mongodb": "*",
     "mongoose": "~3",
     "node-logging": "*",
-    "node-restful": "*",
     "nodemailer": "~0.6",
     "rand-token": "~0.2",
     "rfc822-validate": "~1",

@@ -11,6 +11,8 @@ favicon = require 'static-favicon'
 {json} = require 'body-parser'
 session = require 'cookie-session'
 serveStatic = require 'serve-static'
+baucis = require 'baucis'
+access = require 'baucis-access'
 
 ##
 ## SHARED
@@ -72,14 +74,14 @@ server.use json strict:true
 # Set up session support.
 server.use session key: 'session', keys: config.sessionKeys, signed: true
 
-# Import database schemas.
+# Import database schemas and connect to database.
 server.db = require './schemas'
 server.db.mongoose.connect config.database
 
 # Instantiate controllers.
 server.sessionController = new SessionController new AuthFactory
-server.entryController = new EntryController
-server.tagController = new TagController
+# server.entryController = new EntryController
+# server.tagController = new TagController
 
 # Route: Set up user system routes.
 server.get '/users/me', server.sessionController.getMiddleware 'getUser'
@@ -96,26 +98,39 @@ ensureLogin = server.sessionController.getMiddleware 'ensureLogin'
 ensureOwnership = server.sessionController.getMiddleware 'ensureOwnership'
 
 # Route: Set up entry REST routes.
-server.db.Entry.methods ['post', 'put', 'delete']
-server.db.Entry.before 'post', ensureOwnership
-server.db.Entry.before 'put', ensureOwnership
-server.db.Entry.before 'delete', ensureOwnership
-server.db.Entry.register server, '/entries'
-server.get '/entries', ensureLogin
-server.get '/entries', server.entryController.getMiddleware 'search'
+# server.db.Entry.methods ['post', 'put', 'delete']
+# server.db.Entry.before 'post', ensureOwnership
+# server.db.Entry.before 'put', ensureOwnership
+# server.db.Entry.before 'delete', ensureOwnership
+# server.db.Entry.register server, '/entries'
+# server.get '/entries', ensureLogin
+# server.get '/entries', server.entryController.getMiddleware 'search'
 
 # Route: Set up tag REST routes.
-server.db.Tag.methods ['get', 'post', 'put', 'delete']
-server.db.Tag.before 'get', ensureOwnership
-server.db.Tag.before 'post', ensureOwnership
-server.db.Tag.before 'put', ensureOwnership
-server.db.Tag.before 'delete', ensureOwnership
-server.db.Tag.after 'get', server.tagController.getMiddleware 'addNum'
-server.db.Tag.after 'post', server.tagController.getMiddleware 'addNum'
-server.db.Tag.after 'put', server.tagController.getMiddleware 'addNum'
-server.db.Tag.register server, '/tags'
-server.patch '/tags', ensureLogin
-server.patch '/tags', server.tagController.getMiddleware 'patch'
+# server.db.Tag.methods ['get', 'post', 'put', 'delete']
+# server.db.Tag.before 'get', ensureOwnership
+# server.db.Tag.before 'post', ensureOwnership
+# server.db.Tag.before 'put', ensureOwnership
+# server.db.Tag.before 'delete', ensureOwnership
+# server.db.Tag.after 'get', server.tagController.getMiddleware 'addNum'
+# server.db.Tag.after 'post', server.tagController.getMiddleware 'addNum'
+# server.db.Tag.after 'put', server.tagController.getMiddleware 'addNum'
+# server.db.Tag.register server, '/tags'
+# server.patch '/tags', ensureLogin
+# server.patch '/tags', server.tagController.getMiddleware 'patch'
+
+# Configure entry controller.
+# server.entryController = baucis.rest server.db.Entry
+server.tagController = baucis.rest 'tag'
+server.tagController.request ensureLogin
+# server.tagController.query ensureOwnership
+
+# server.tagController.access
+#   authenticated: create: true, read: false
+#   owner: create: true, read: true
+
+# Register controller middleware.
+server.use baucis()
 
 # Start listening on the server port.
 server.listen config.serverPort if config.serverPort

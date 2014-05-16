@@ -79,7 +79,7 @@ Run tests using `cake test` or `cake --watch test` to continuously test.
 * [Mongoose](http://mongoosejs.com/docs/api.html): Database abstraction layer used.
 * [MongoDB](http://docs.mongodb.org/manual/): Database used.
 * [Bluebird](https://github.com/petkaantonov/bluebird/blob/master/API.md): Promise library used.
-* [Node Restful](https://github.com/baugarten/node-restful): Mongoose exposure to REST helpers.
+* [Baucis](https://github.com/wprl/baucis): RESTful controllers for Mongoose.
 * [Node Logging](https://github.com/Monwara/node-logging): Logging library used.
 * [Node bcrypt](https://github.com/ncb000gt/node.bcrypt.js): Hashing and cryptology library used.
 * [Node rand-token](https://github.com/sehrope/node-rand-token): Token generating library.

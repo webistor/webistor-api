@@ -61,10 +61,10 @@ module.exports = class SessionController extends Controller
   ###
   ensureOwnership: (req, res, field = 'author') ->
     @ensureLogin req
-    throw new Error "No query." unless req.quer?
+    throw new Error "No query." unless req.baucis.query?
     where = {}
     where[field] = req.session.userId
-    req.quer.where where
+    req.baucis.query.where where
     (if Array.isArray req.body then req.body else [req.body])
     .forEach (resource) -> resource?[field] = req.session.userId
     return null
