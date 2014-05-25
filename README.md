@@ -12,7 +12,7 @@
   [From website](http://www.mongodb.org/)
 * Install Node Package Manager
   `sudo chown -R $USER /usr/local`
-  `curl http://npmjs.org/install.sh | sh`
+  `curl https://www.npmjs.org/install.sh | sh`
 
 ### Installation
 
