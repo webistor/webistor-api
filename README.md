@@ -7,7 +7,8 @@
 * Install build tools
   `apt-get install build-essential g++`
 * Install Node
-  [From website](http://nodejs.org/)
+  `sudo apt-get install nodejs-legacy`
+  or [From website](http://nodejs.org/)
 * Install MongoDB Version 2.6 or higher
   [From website](http://www.mongodb.org/)
 * Install Node Package Manager
@@ -49,7 +50,7 @@
 * Watch JavaScript
   `cake -w start`
 * **Don't commit your local environment settings**:
-  [How to ignore files](https://help.github.com/articles/ignoring-files)
+  [How to ignore versioned files](https://help.github.com/articles/ignoring-files#ignoring-versioned-files)
 
 ### Testing
 
@@ -75,7 +76,6 @@ Run tests using `cake test` or `cake --watch test` to continuously test.
 * [CoffeeScript](http://coffeescript.org/): Source code language.
 * [Node](http://nodejs.org/api/): JavaScript built-ins.
 * [Express](http://expressjs.com/api.html): Framework used.
-* [Connect](http://www.senchalabs.org/connect/): Framework used by Express.
 * [Mongoose](http://mongoosejs.com/docs/api.html): Database abstraction layer used.
 * [MongoDB](http://docs.mongodb.org/manual/): Database used.
 * [Bluebird](https://github.com/petkaantonov/bluebird/blob/master/API.md): Promise library used.
@@ -87,7 +87,7 @@ Run tests using `cake test` or `cake --watch test` to continuously test.
 #### Testing
 
 * [Mocha](http://visionmedia.github.io/mocha/#getting-started): Test runner and describer
-* [Must](https://github.com/moll/js-must/blob/master/doc/API.md): BDD asserting library.
+* [Must](https://github.com/moll/js-must/blob/master/doc/API.md): BDD Assertion library.
 * [Supertest](https://github.com/visionmedia/supertest): HTTP Assertion library.
 
 ### Planned features

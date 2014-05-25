@@ -171,6 +171,7 @@ module.exports = class SessionController extends Controller
   ###
   usernameExists: (req) ->
     throw new ServerError 400, "No username given." unless req.body.username
+    Promise.resolve true if req.body.username in config.reservedUserNames
     User.findOneAsync {username:req.body.username}
     .then (user) -> user?
 
