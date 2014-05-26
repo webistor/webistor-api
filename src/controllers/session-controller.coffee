@@ -186,8 +186,8 @@ module.exports = class SessionController extends Controller
   ###
   register: (req) ->
 
-    # Can only autonomously register during open beta or after release.
-    unless config.releaseStage in ['openBeta', 'postRelease']
+    # Can only autonomously register during public beta or after release.
+    unless config.releaseStage in ['publicBeta', 'postRelease']
       throw new ServerError 403, "User registration is not allowed at this stage."
 
     # Create the user object locally.

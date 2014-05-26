@@ -21,6 +21,17 @@ schemas =
     password: type: String, required: true, select: false, match: /^.{4,48}$/
     friends:  type: [ObjectId], ref: 'user'
 
+  # The Invitation schema.
+  Invitation: Schema
+    email:   type: String, required: true, unique: true, index: true lowercase: true, validate: [
+      validateEmail, "given email address is not valid"
+    ]
+    created: type: Date, default: Date.now
+    state:   type: String, enum: ['awaiting', 'accepted', 'registered'], default: 'awaiting'
+    author:  type: ObjectId, ref: 'user'
+    user:    type: ObjectId, ref: 'user'
+    token:   type: String, select: false
+
   # The Group schema.
   Group: Schema
     author:  type: ObjectId, ref: 'user', required: true, index: true
@@ -54,6 +65,9 @@ schemas =
 
 # Add user password hashing middleware.
 schemas.User.pre 'save', Auth.Middleware.hashPassword()
+
+# Get the number of invitations sent by this user.
+schemas.User.method 'countInvitations', (cb) -> @model('invitation').count {author:this}, cb
 
 # Add text indexes for text-search support.
 schemas.Entry.index {title:'text', description:'text'}, {default_language: 'en'}

@@ -7,6 +7,7 @@ AuthFactory = require './classes/auth-factory'
 SessionController = require './controllers/session-controller'
 EntryController = require './controllers/entry-controller'
 TagController = require './controllers/tag-controller'
+InvitationController = require './controllers/invitation-controller'
 favicon = require 'static-favicon'
 {json} = require 'body-parser'
 session = require 'cookie-session'
@@ -80,6 +81,7 @@ server.db.mongoose.connect config.database
 server.sessionController = new SessionController new AuthFactory
 server.entryController = new EntryController
 server.tagController = new TagController
+server.invitationController = new InvitationController
 
 # Route: Set up user system routes.
 server.get '/users/me', server.sessionController.getMiddleware 'getUser'
@@ -116,6 +118,12 @@ server.db.Tag.after 'put', server.tagController.getMiddleware 'addNum'
 server.db.Tag.register server, '/tags'
 server.patch '/tags', ensureLogin
 server.patch '/tags', server.tagController.getMiddleware 'patch'
+
+# Route: Set up invitation related routes.
+server.post '/invitations/request', server.invitationController.getMiddleware 'request'
+server.post '/invitations', ensureLogin
+server.post '/invitations',  server.invitationController.getMiddleware 'invite'
+
 
 # Start listening on the server port.
 server.listen config.serverPort if config.serverPort
