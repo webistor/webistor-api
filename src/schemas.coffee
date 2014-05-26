@@ -14,10 +14,10 @@ schemas =
 
   # The User schema.
   User: Schema
-    email:    type: String, required: true, unique: true, lowercase: true, validate: [
+    email:    type: String, required: true, unique: true, index: true, lowercase: true, validate: [
       validateEmail, "given email address is not valid"
     ]
-    username: type: String, required: true, unique: true, lowercase: true, match: /^[\w-_]{4,48}$/
+    username: type: String, required: true, unique: true, index:true, lowercase: true, match: /^[\w-_]{4,48}$/
     password: type: String, required: true, select: false, match: /^.{4,48}$/
     friends:  type: [ObjectId], ref: 'user'
 
@@ -59,7 +59,7 @@ schemas.User.pre 'save', Auth.Middleware.hashPassword()
 schemas.Entry.index {title:'text', description:'text'}, {default_language: 'en'}
 
 # This method can be relied upon to return the actual number of entries.
-schemas.Tag.method 'getNum', (cb) -> @model('tag').count {tags:@id}, cb
+schemas.Tag.method 'countEntries', (cb) -> @model('tag').count {tags:@id}, cb
 
 ##
 ## MODELS

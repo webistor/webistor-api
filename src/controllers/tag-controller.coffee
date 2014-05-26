@@ -4,7 +4,6 @@ config = require '../config'
 ServerError = require './base/server-error'
 log = require 'node-logging'
 Tag = Promise.promisifyAll (require '../schemas').Tag
-Entry = Promise.promisifyAll (require '../schemas').Entry
 
 module.exports = class TagController extends Controller
 
@@ -51,7 +50,7 @@ module.exports = class TagController extends Controller
 
     # The function that adds the number to a single tag.
     addNum = (tag) ->
-      Entry.countAsync tags:tag._id
+      Promise.promisify(tag.countEntries, tag)()
       .then (num) -> tag.set 'num', num
       .return null
 

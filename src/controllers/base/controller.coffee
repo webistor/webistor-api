@@ -12,7 +12,7 @@ module.exports = class Controller
    * promised return value will be waited for instead.
    *
    * @param {String} actionName The name of the action (method name of the implementing controller).
-   * @param {Object} args... Further optional arguments to pass to the action at calltime.
+   * @param {Object} args... Further optional arguments to pass to the action at call-time.
    *
    * @return {Function} The middleware for Express.
   ###
@@ -28,17 +28,25 @@ module.exports = class Controller
     catch err
       return @sendError req, res, err
 
-    # Either call the next middlware, or respond with the return value, depending on whether it's given.
+    # Either call the next middleware, or respond with the return value, depending on whether it's given.
+    return if res.headersSent
     return next() unless ret?
     return @sendData req, res, ret unless Promise.is ret
 
     # At this point we can treat the return value as a promise, and handle is that way.
     ret
-    .then (data) => if data? then @sendData req, res, data else do next
-    .catch (err) => @sendError req, res, err
+
+    # Forge and send a response based on the resolution value.
+    .then (data) =>
+      return if res.headersSent
+      if data? then @sendData req, res, data else do next
+
+    # Forge a response based on the rejection reason.
+    .catch (err) =>
+      @sendError req, res, err
 
   ###*
-   * Get synchrounous middleware for an action.
+   * Get synchronous middleware for an action.
    *
    * @deprecated getMiddleware now handles this automatically.
    *
@@ -46,7 +54,7 @@ module.exports = class Controller
    * provided, the next middleware will be called.
    *
    * @param {String} actionName The name of the action (method name of the implementing controller).
-   * @param {Object} args... Further optional arguments to pass to the action at calltime.
+   * @param {Object} args... Further optional arguments to pass to the action at call-time.
    *
    * @return {Function} The middleware for Express.
   ###
