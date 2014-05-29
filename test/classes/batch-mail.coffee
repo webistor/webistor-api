@@ -7,8 +7,6 @@ BatchMail = require '../../src/classes/batch-mail'
 # Test the parent class first.
 require './mail'
 
-Mail.TEMPLATE_DIRECTORY = path.resolve __dirname, '../templates/mail'
-
 onSuccess = (callback) -> (err, args...) ->
   console.log err if err
   throw err if err

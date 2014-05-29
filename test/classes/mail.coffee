@@ -7,14 +7,19 @@ EmailAddress = require '../../src/classes/email-address'
 # Test email address first.
 require "./email-address"
 
-Mail.TEMPLATE_DIRECTORY = path.resolve __dirname, '../templates/mail'
-
 onSuccess = (callback) -> (err, args...) ->
   console.log err if err
   throw err if err
   callback? args...
 
 describe "Mail", ->
+
+  before ->
+    @ORIG_MAIL_TEMPLATE_DIRECTORY = Mail.TEMPLATE_DIRECTORY
+    Mail.TEMPLATE_DIRECTORY = path.resolve __dirname, '../templates/mail'
+
+  after ->
+    Mail.TEMPLATE_DIRECTORY = @ORIG_MAIL_TEMPLATE_DIRECTORY
 
   mailTemplate =
     from: 'bob'
