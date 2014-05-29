@@ -67,6 +67,15 @@ module.exports = class InvitationController extends Controller
     # Create and save a new invitation.
     .then -> Promise.promisifyAll(new Invitation email:req.body.email).saveAsync()
 
+    # Send the user an email to let them know they've been added to the waiting list.
+    .spread (invitation) ->
+      new Mail()
+      .from 'Webistor Invitations <invitations@webistor.net>'
+      .to invitation.email
+      .subject "Requested invitation - confirmation"
+      .template "invitations/request-confirmation", {invitation}
+      .send()
+
     # Hide "user in the system" errors from the response.
     .catch (ServerError.Predicate 600), (err) ->
       log.dbg "Failed to create invitation request for #{req.body.email}: #{err.message}"
