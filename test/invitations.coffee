@@ -24,14 +24,14 @@ fixError = (callback) -> (err, res) ->
 ## TESTS
 ##
 
-describe.only "Invitation (REST)", ->
+describe "Invitation (REST)", ->
 
   after (done) -> Invitation.remove {}, done
   after (done) -> User.remove {}, done
 
   req = supertest server
 
-  describe 'requests', ->
+  describe.skip 'requests', ->
 
     avaq = email:'aldwin.vlasblom@gmail.com'
 
