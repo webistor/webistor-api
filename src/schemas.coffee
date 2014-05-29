@@ -23,11 +23,11 @@ schemas =
 
   # The Invitation schema.
   Invitation: Schema
-    email:   type: String, required: true, unique: true, index: true lowercase: true, validate: [
+    email:   type: String, required: true, unique: true, index: true, lowercase: true, validate: [
       validateEmail, "given email address is not valid"
     ]
     created: type: Date, default: Date.now
-    state:   type: String, enum: ['awaiting', 'accepted', 'registered'], default: 'awaiting'
+    status:  type: String, enum: ['awaiting', 'accepted', 'registered'], default: 'awaiting'
     author:  type: ObjectId, ref: 'user'
     user:    type: ObjectId, ref: 'user'
     token:   type: String, select: false
