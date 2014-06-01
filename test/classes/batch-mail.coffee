@@ -14,6 +14,13 @@ onSuccess = (callback) -> (err, args...) ->
 
 describe "BatchMail", ->
 
+  before ->
+    @ORIG_MAIL_TEMPLATE_DIRECTORY = Mail.TEMPLATE_DIRECTORY
+    Mail.TEMPLATE_DIRECTORY = path.resolve __dirname, '../templates/mail'
+
+  after ->
+    Mail.TEMPLATE_DIRECTORY = @ORIG_MAIL_TEMPLATE_DIRECTORY
+
   describe "::batch", ->
 
     it "should set a batch handler function", ->

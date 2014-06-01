@@ -18,7 +18,7 @@ schemas =
       validateEmail, "given email address is not valid"
     ]
     username: type: String, required: true, unique: true, index:true, lowercase: true, match: /^[\w-_]{4,48}$/
-    password: type: String, required: true, select: false, match: /^.{4,48}$/
+    password: type: String, required: true, select: false, match: /^.{4,128}$/
     friends:  type: [ObjectId], ref: 'user'
 
   # The Invitation schema.
