@@ -10,9 +10,25 @@ Mail = require '../classes/mail'
 module.exports = class InvitationController extends Controller
 
   ###*
+   * Find an invitation by its token.
+   *
+   * @param {http.IncomingMessage} req The Express request object. Required fields:
+   *                                   `req.params.token`: The token.
+   *
+   * @return {Promise} A promise of an invitation.
+  ###
+  findByToken: (req) ->
+    throw new ServerError 400, "No token provided." unless req.params.token
+    Invitation.findOneAsync {token:req.params.token}, '+token'
+    .then (invitation) ->
+      throw new ServerError 404, "Invitation not found." unless invitation
+      return invitation
+
+  ###*
    * Store an unaccepted invitation under the given email address.
    *
-   * @param {http.IncomingMessage} req The Express request object.
+   * @param {http.IncomingMessage} req The Express request object. Required fields:
+   *                                   `req.body.email`: The email address.
    *
    * @return {Promise} A Promise which resolves once the response is generated.
   ###
@@ -40,7 +56,7 @@ module.exports = class InvitationController extends Controller
     # Check the database if the user is already in the system.
     .then ->
       d = Promise.defer()
-      Invitation.findOne({email:req.body.email}).populate('author').exec(d.callback)
+      Invitation.findOne({email:req.body.email}, '+token').populate('author').exec(d.callback)
       return d.promise
 
     # Handle the database result.
@@ -50,7 +66,7 @@ module.exports = class InvitationController extends Controller
       return unless invitation?
 
       # Ensure the invitation has a valid status.
-      unless invitation.status in ['awaiting', 'invited']
+      unless invitation.status in ['awaiting', 'accepted']
         throw new ServerError 500, "Invitation process completed but user not found."
 
       # Send an email to tell the user in which status their invitation is.

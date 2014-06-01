@@ -120,10 +120,10 @@ server.patch '/tags', ensureLogin
 server.patch '/tags', server.tagController.getMiddleware 'patch'
 
 # Route: Set up invitation related routes.
+server.get '/invitations/:token', server.invitationController.getMiddleware 'findByToken'
 server.post '/invitations/request', server.invitationController.getMiddleware 'request'
 server.post '/invitations', ensureLogin
 server.post '/invitations',  server.invitationController.getMiddleware 'invite'
-
 
 # Start listening on the server port.
 server.listen config.serverPort if config.serverPort
