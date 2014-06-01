@@ -44,7 +44,7 @@ module.exports = class InvitationController extends Controller
       # If the user is found, send them an email to remind them.
       return unless user?
       new Mail()
-      .from 'Webistor Invitations <invitations@webistor.net>'
+      .from 'Webistor <hello@webistor.net>'
       .to user
       .subject 'Requested invitation - already registered'
       .template 'invitations/user-already-registered', {user}
@@ -71,7 +71,7 @@ module.exports = class InvitationController extends Controller
 
       # Send an email to tell the user in which status their invitation is.
       new Mail()
-      .from 'Webistor Invitations <invitations@webistor.net>'
+      .from 'Webistor <hello@webistor.net>'
       .to invitation.email
       .subject "Requested invitation - #{invitation.status}"
       .template "invitations/user-already-#{invitation.status}", {invitation}
@@ -86,7 +86,7 @@ module.exports = class InvitationController extends Controller
     # Send the user an email to let them know they've been added to the waiting list.
     .spread (invitation) ->
       new Mail()
-      .from 'Webistor Invitations <invitations@webistor.net>'
+      .from 'Webistor <hello@webistor.net>'
       .to invitation.email
       .subject "Requested invitation - confirmation"
       .template "invitations/request-confirmation", {invitation}
@@ -97,7 +97,7 @@ module.exports = class InvitationController extends Controller
       log.dbg "Failed to create invitation request for #{req.body.email}: #{err.message}"
 
     # Send the response.
-    .then -> res.send 201
+    .then -> res.send 201, {email:req.body.email}
 
   ###*
    * The logged in user expends an invitation "coupon" in order to invite a friend.

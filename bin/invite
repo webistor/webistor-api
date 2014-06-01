@@ -114,7 +114,7 @@ invite = (options = {}) ->
     .then ->
       log.inf "Sending mails..."
       new BatchMail()
-      .from "Webistor Invitations <invitations@webistor.net>"
+      .from "Webistor <hello@webistor.net>"
       .to invitations
       .subject 'Your request has been accepted!'
       .template 'invitations/request-accepted', (address) ->
