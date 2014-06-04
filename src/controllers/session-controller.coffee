@@ -4,8 +4,10 @@ _ = require 'lodash'
 AuthError = require '../classes/auth-error'
 ServerError = require './base/server-error'
 log = require 'node-logging'
-User = Promise.promisifyAll (require '../schemas').User
-Invitation = Promise.promisifyAll (require '../schemas').Invitation
+schemas = require '../schemas'
+{mongoose} = schemas
+User = Promise.promisifyAll schemas.User
+Invitation = Promise.promisifyAll schemas.Invitation
 config = require '../config'
 
 module.exports = class SessionController extends Controller
@@ -238,6 +240,10 @@ module.exports = class SessionController extends Controller
       return p1 unless invitation.author
       p2 = User.updateAsync {_id:invitation.author}, {$push:friends:user.id}
       Promise.join p1, p2
+
+    # Cast validation errors to something our crummy code can work with.
+    .catch mongoose.Error.ValidationError, (err) ->
+      throw new ServerError 400, err.toString()
 
     # Return the user.
     .then -> _.omit user.toObject(), 'password'
