@@ -175,8 +175,8 @@ module.exports = class SessionController extends Controller
   usernameExists: (req) ->
     throw new ServerError 400, "No username given." unless req.body.username
     Promise.resolve true if req.body.username in config.reservedUserNames
-    User.findOneAsync {username:req.body.username}
-    .then (user) -> user?
+    User.findOneAsync {username:req.body.username.toLowerCase()}
+    .then (user) -> return user?
 
   ###*
    * Register a new user.
@@ -211,8 +211,9 @@ module.exports = class SessionController extends Controller
     .then -> user.validateAsync()
 
     # Proceed by checking if the username is taken or not.
-    .then => @usernameExists req
-    .then (exists) -> throw new ServerError 409, "Username is taken." if exists
+    .then -> User.findOneAsync {username:user.username}
+    .then (result) ->
+      throw new ServerError 409, "Username is taken." if result?
 
     # Proceed by checking if the user is already registered.
     .then -> User.findOneAsync {email:user.email}
