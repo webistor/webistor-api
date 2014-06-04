@@ -17,8 +17,13 @@ schemas =
     email:    type: String, required: true, unique: true, index: true, lowercase: true, validate: [
       validateEmail, "given email address is not valid"
     ]
-    username: type: String, required: true, unique: true, index:true, lowercase: true, match: /^[\w-_]{4,48}$/
-    password: type: String, required: true, select: false, match: /^.{4,128}$/
+    username: type: String, required: true, unique: true, index:true, lowercase: true, validate: [
+      /^[\w-_]{4,48}$/
+      "Username must be between 4 and 48 characters and only contain letters, numbers dashes and underscores."
+    ]
+    password: type: String, required: true, select: false, validate: [
+      /^.{4,128}$/, "Password must be between 4 and 128 characters."
+    ]
     friends:  type: [ObjectId], ref: 'user'
 
   # The Invitation schema.
