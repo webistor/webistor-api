@@ -225,7 +225,6 @@ module.exports = class SessionController extends Controller
 
     # Proceed to register the user.
     .then -> user.saveAsync()
-    .spread (nuser) -> user = nuser
 
     # Proceed to update the potential user invitation.
     .then ->
