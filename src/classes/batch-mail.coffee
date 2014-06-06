@@ -105,11 +105,12 @@ module.exports = class BatchMail extends Mail
     .then -> emailTemplates Mail.TEMPLATE_DIRECTORY
     .then (template) -> Promise.promisify(template) name, true
     .then (batch) ->
+      batch = Promise.promisify batch
       @batch (recipient) ->
         Promise.try data, recipient, this
         .then (data) =>
           return unless data?
-          Promise.promisify(batch) data, null
+          batch data, null
           .spread (html, text) =>
             @text text
             @html html
