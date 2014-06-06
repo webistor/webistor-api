@@ -5,15 +5,14 @@
 ### Prerequisites
 
 * Install build tools
-  `apt-get install build-essential g++`
+  `sudo apt-get install gcc make build-essential g++`
 * Install Node
   `sudo apt-get install nodejs-legacy`
   or [From website](http://nodejs.org/)
 * Install MongoDB Version 2.6 or higher
   [From website](http://www.mongodb.org/)
 * Install Node Package Manager
-  `sudo chown -R $USER /usr/local`
-  `curl https://www.npmjs.org/install.sh | sh`
+  `curl https://www.npmjs.org/install.sh | sudo sh`
 
 ### Installation
 
