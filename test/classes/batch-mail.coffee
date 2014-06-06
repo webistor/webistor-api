@@ -3,6 +3,7 @@ util = require 'util'
 config = require '../_config'
 Mail = require '../../src/classes/mail'
 BatchMail = require '../../src/classes/batch-mail'
+Promise = require 'bluebird'
 
 # Test the parent class first.
 require './mail'
@@ -50,6 +51,19 @@ describe "BatchMail", ->
           mail2._text.must.contain "**You are test!**"
 
       .done done
+
+    it "should handle errors in template generation", (done) ->
+      mail = (new BatchMail)
+      .generate 'generation-error', (recipient) -> {}
+      .then -> done new Error 'No errors were handled'
+      .catch (err) -> done()
+
+    it "should handle errors in template population", (done) ->
+      mail = new BatchMail
+      mail.generate 'population-error', (recipient) -> {}
+      .then -> Promise.try mail._batch, 'test@example.com', new Mail
+      .then -> done new Error 'No errors were handled'
+      .catch (err) -> done()
 
   describe.skip "sending", ->
 

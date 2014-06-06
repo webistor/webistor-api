@@ -10,6 +10,7 @@ module.exports = class Mail
 
   # Constants.
   @TEMPLATE_DIRECTORY: path.resolve __dirname, '../templates/mail'
+  @TEMPLATE_DEFAULTS: {paths:[@TEMPLATE_DIRECTORY]}
   @R_SPLIT_ADDRESSES: /\s*[,;]\s*/
 
   # Create the NodeMailer transport object.
@@ -191,7 +192,7 @@ module.exports = class Mail
   ###
   generate: (name, data) ->
     Promise.bind this
-    .then -> emailTemplates Mail.TEMPLATE_DIRECTORY
+    .then -> emailTemplates Mail.TEMPLATE_DIRECTORY, Mail.TEMPLATE_DEFAULTS
     .then (template) -> Promise.promisify(template) name, data
     .spread (html, text) ->
       @text text

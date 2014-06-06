@@ -62,7 +62,7 @@ invite = (options = {}) ->
   {limit, email} = options
 
   # Set log-level.
-  log.setLevel if verbose then 'info' else 'error'
+  log.setLevel if verbose then 'debug' else 'error'
 
   #TODO: semantic time
 
@@ -123,8 +123,33 @@ invite = (options = {}) ->
         return {invitation}
       .send()
 
-  # Log result.
+    # Log result. Revert records of failed emails.
+    .then (results) ->
+      return if results.done.length is invitations.length
+
+      # Log failures.
+      log.err "#{results.failed.length} out of #{invitations.length} failed!"
+      log.dbg "#{failed.email}: " + failed.error.toString() for failed in results.failed
+
+      # Rollback failues.
+      log.inf 'Rolling back failures...'
+      Promise.all invitations
+      .filter (invitation) ->
+        results.failed.some (failed) -> failed.email.getAddress() is invitation.email
+      .map (invitation) ->
+        d = Promise.defer()
+        invitation.set(status: 'awaiting', token: null).save d.callback
+        return d.promise
+
+      # Inform someone about the severity of the event of an error in the above procedure.
+      .catch (err) ->
+        log.bad "Failed to rollback recipients who were unable to receive an email!"
+        throw err
+
+  # Log the good news.
   .then -> log.inf "All done!"
+
+  # Log the bad news.
   .catch (err) -> log.err err.toString()
 
 
