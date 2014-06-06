@@ -43,7 +43,7 @@ task 'start', 'start the app', (o) -> build -> (if o.watch then nodemon else sta
  * Test
  * Runs your test suite. Can watch.
 ###
-task 'test', 'run tests', (o) -> build -> mocha o, -> log ":)", green
+task 'test', 'run tests', (o) -> mocha o, -> log ":)", green
 
 ###*
  * Clean
@@ -128,6 +128,17 @@ build = (argv, callback) ->
   options = ['-c', '-b']
   options.push '-w' if 'watch' of argv
   options = options.concat ['-o', files...]
+  # log 'Copying assets...', green
+  # walk 'src', (err, arr) ->
+  #   assets = arr.filter (file) -> file.lastIndexOf('.coffee') isnt file.length - 7
+  #   for asset in assets
+  #     rel = asset.substr (asset.indexOf '/') + 1
+  #     dir = rel.substr 0, (rel.lastIndexOf '/')
+  #     console.log dir
+  #     launch "mkdir -p ./lib/#{dir}", null, ->
+  #     fs.writeFileSync "lib/#{rel}", (fs.readFileSync asset)
+
+  log 'Compiling CoffeeScript...', green
   launch './node_modules/coffee-script/bin/coffee', options, callback
 
 # ## *start*
