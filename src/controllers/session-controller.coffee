@@ -114,7 +114,7 @@ module.exports = class SessionController extends Controller
       if req.body.password
         method = 'authenticatePassword'
         value = req.body.password
-        passwordRegex = User.schema.tree.password.match
+        passwordRegex = User.schema.tree.password.validate[0]
         throw new AuthError AuthError.MISSMATCH, "Password out of bounds." unless passwordRegex.test value
 
       # The token must be 32 characters long.
