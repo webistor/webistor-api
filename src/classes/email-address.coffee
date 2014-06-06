@@ -102,10 +102,10 @@ module.exports = class EmailAddress
   ###*
    * Return true if both addresses are the same.
    *
-   * @param {EmailAddress|String} address The EmailAddress or string to compare to.
+   * @param {EmailAddress|String} email The EmailAddress or string to compare to.
    *
    * @return {Boolean}
   ###
-  equals: (address) ->
-    email = if address instanceof EmailAddress then address else new EmailAddress address
-    return email.getAddress() is @getAddress()
+  equals: (email) ->
+    address = if email instanceof EmailAddress then email.getAddress() else email.toString()
+    return address is @getAddress()
