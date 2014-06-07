@@ -14,6 +14,8 @@
 * Install Node Package Manager
   `curl https://www.npmjs.org/install.sh | sudo sh` OR
   `sudo apt-get install npm`
+* Install CoffeeScript
+  `npm install -g coffee-script`
 
 For Node and NPM
 [this install guide](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager)
