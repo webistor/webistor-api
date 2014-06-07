@@ -12,7 +12,12 @@
 * Install MongoDB Version 2.6 or higher
   [From website](http://www.mongodb.org/)
 * Install Node Package Manager
-  `curl https://www.npmjs.org/install.sh | sudo sh`
+  `curl https://www.npmjs.org/install.sh | sudo sh` OR
+  `sudo apt-get install npm`
+
+For Node and NPM
+[this install guide](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager)
+explains several different approaches to installing on different platforms.
 
 ### Installation
 
