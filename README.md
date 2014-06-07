@@ -18,6 +18,8 @@
 For Node and NPM
 [this install guide](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager)
 explains several different approaches to installing on different platforms.
+[These gists](https://gist.github.com/isaacs/579814) are helpful when you want/need to
+install node without sudo, which can prevent some access problems later on.
 
 ### Installation
 
