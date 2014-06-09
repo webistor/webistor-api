@@ -10,7 +10,12 @@ module.exports =
   logLevel: 'debug'
   whitelist: ['localhost', 'webistor.net']
   sessionKeys: ['sesamopenu']
-  releaseStage: ['alpha', 'closedBeta', 'openBeta', 'postRelease'][1]
+
+  # The release stage is used mainly for access control.
+  releaseStage: ['alpha', 'privateBeta', 'openBeta', 'publicBeta', 'postRelease'][1]
+
+  # The maximum amount of email addresses that any user is allowed invite to the open beta.
+  maxUserInvitations: 5
 
   # NodeMailer transport options.
   # See: https://github.com/andris9/Nodemailer#setting-up-a-transport-method

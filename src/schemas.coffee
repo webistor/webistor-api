@@ -17,9 +17,25 @@ schemas =
     email:    type: String, required: true, unique: true, index: true, lowercase: true, validate: [
       validateEmail, "given email address is not valid"
     ]
-    username: type: String, required: true, unique: true, index:true, lowercase: true, match: /^[\w-_]{4,48}$/
-    password: type: String, required: true, select: false, match: /^.{4,48}$/
+    username: type: String, required: true, unique: true, index:true, lowercase: true, validate: [
+      /^[\w-_]{4,48}$/
+      "Username must be between 4 and 48 characters and only contain letters, numbers dashes and underscores."
+    ]
+    password: type: String, required: true, select: false, validate: [
+      /^.{4,128}$/, "Password must be between 4 and 128 characters."
+    ]
     friends:  type: [ObjectId], ref: 'user'
+
+  # The Invitation schema.
+  Invitation: Schema
+    email:   type: String, required: true, unique: true, index: true, lowercase: true, validate: [
+      validateEmail, "given email address is not valid"
+    ]
+    created: type: Date, default: Date.now
+    status:  type: String, enum: ['awaiting', 'accepted', 'registered'], default: 'awaiting'
+    author:  type: ObjectId, ref: 'user'
+    user:    type: ObjectId, ref: 'user'
+    token:   type: String, select: false
 
   # The Group schema.
   Group: Schema
@@ -54,6 +70,9 @@ schemas =
 
 # Add user password hashing middleware.
 schemas.User.pre 'save', Auth.Middleware.hashPassword()
+
+# Get the number of invitations sent by this user.
+schemas.User.method 'countInvitations', (cb) -> @model('invitation').count {author:this}, cb
 
 # Add text indexes for text-search support.
 schemas.Entry.index {title:'text', description:'text'}, {default_language: 'en'}

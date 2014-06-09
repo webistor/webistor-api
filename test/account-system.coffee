@@ -198,7 +198,7 @@ describe "Managing users", ->
       .end logError done
 
     it "should allow user registration while in public beta release state", (done) ->
-      config.releaseStage = 'openBeta'
+      config.releaseStage = 'publicBeta'
       agentBond.post '/users'
       .send bond
       .expect 200

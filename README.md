@@ -94,9 +94,14 @@ Run tests using `cake test` or `cake --watch test` to continuously test.
 
 #### Testing
 
-* [Mocha](http://visionmedia.github.io/mocha/#getting-started): Test runner and describer
+* [Mocha](http://visionmedia.github.io/mocha/#getting-started): Test runner and describer.
 * [Must](https://github.com/moll/js-must/blob/master/doc/API.md): BDD Assertion library.
 * [Supertest](https://github.com/visionmedia/supertest): HTTP Assertion library.
+
+#### CLI
+
+* [Commander](https://github.com/visionmedia/commander.js/): Argv parser and utilities.
+* [CLI Table](https://github.com/LearnBoost/cli-table): Unicode pretty table generator.
 
 ### Planned features
 

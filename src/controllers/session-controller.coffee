@@ -4,7 +4,10 @@ _ = require 'lodash'
 AuthError = require '../classes/auth-error'
 ServerError = require './base/server-error'
 log = require 'node-logging'
-User = Promise.promisifyAll (require '../schemas').User
+schemas = require '../schemas'
+{mongoose} = schemas
+User = Promise.promisifyAll schemas.User
+Invitation = Promise.promisifyAll schemas.Invitation
 config = require '../config'
 
 module.exports = class SessionController extends Controller
@@ -111,7 +114,7 @@ module.exports = class SessionController extends Controller
       if req.body.password
         method = 'authenticatePassword'
         value = req.body.password
-        passwordRegex = User.schema.tree.password.match
+        passwordRegex = User.schema.tree.password.validate[0]
         throw new AuthError AuthError.MISSMATCH, "Password out of bounds." unless passwordRegex.test value
 
       # The token must be 32 characters long.
@@ -163,7 +166,7 @@ module.exports = class SessionController extends Controller
         problem persists, please contact support."
 
   ###*
-   * Check for the existance of a username.
+   * Check for the existence of a username.
    *
    * @param {http.IncomingMessage} req The Express request object.
    *
@@ -172,8 +175,8 @@ module.exports = class SessionController extends Controller
   usernameExists: (req) ->
     throw new ServerError 400, "No username given." unless req.body.username
     Promise.resolve true if req.body.username in config.reservedUserNames
-    User.findOneAsync {username:req.body.username}
-    .then (user) -> user?
+    User.findOneAsync {username:req.body.username.toLowerCase()}
+    .then (user) -> return user?
 
   ###*
    * Register a new user.
@@ -186,27 +189,64 @@ module.exports = class SessionController extends Controller
   ###
   register: (req) ->
 
-    # Can only autonomously register during open beta or after release.
-    unless config.releaseStage in ['openBeta', 'postRelease']
-      throw new ServerError 403, "User registration is not allowed at this stage."
+    # Force some variables to this scope.
+    user = null
+    invitation = null
 
-    # Create the user object locally.
-    user = Promise.promisifyAll new User req.body
+    # Intercept invitation token.
+    token = req.body.invitation
+    delete req.body.invitation
+
+    # Find a matching invitation and validate it if necessary.
+    Invitation.findOneAsync {email:req.body.email}, '+token'
+    .then (result) ->
+      invitation = result
+      return if config.releaseStage in ['publicBeta', 'postRelease']
+      throw new ServerError 403, "Invalid invitation token." unless result and token? and result.token is token
+
+    # Create the user.
+    .then -> user = Promise.promisifyAll new User req.body
 
     # Validate given data.
-    user.validateAsync()
+    .then -> user.validateAsync()
 
     # Proceed by checking if the username is taken or not.
-    .then => @usernameExists req
-    .then (exists) -> throw new ServerError 409, "Username is taken." if exists
+    .then -> User.findOneAsync {username:user.username}
+    .then (result) ->
+      throw new ServerError 409, "Username is taken." if result?
 
     # Proceed by checking if the user is already registered.
     .then -> User.findOneAsync {email:user.email}
     .then (user) -> throw new ServerError 409, "Email address is taken." if user?
 
+    # Make friends if this user was invited.
+    .then ->
+      return unless invitation and invitation.author
+      user.friends.push invitation.author
+
     # Proceed to register the user.
     .then -> user.saveAsync()
-    .spread (user) -> _.omit user.toObject(), 'password'
+
+    # Proceed to update the potential user invitation.
+    .then ->
+      return unless invitation
+      invitation.set
+        user: user.id
+        status: 'registered'
+        token: null
+      d = Promise.defer()
+      invitation.save d.callback
+      p1 = d.promise
+      return p1 unless invitation.author
+      p2 = User.updateAsync {_id:invitation.author}, {$push:friends:user.id}
+      Promise.join p1, p2
+
+    # Cast validation errors to something our crummy code can work with.
+    .catch mongoose.Error.ValidationError, (err) ->
+      throw new ServerError 400, err.toString()
+
+    # Return the user.
+    .then -> _.omit user.toObject(), 'password'
 
   ###*
    * Log a user out, removing them from their session.
