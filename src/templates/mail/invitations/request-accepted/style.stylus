@@ -1,18 +1,5 @@
 @import 'invitations/global-style'
 
-#container
-  background-color: #f8f9fa
-  width: 100%
-
-#inner
-  margin: 32px auto
-  width: 375px
-  max-width: 98%
-  background: #fff
-  border: solid #dfe4e6 1px
-  color: #67737a
-  padding: 32px 85px 32px 85px
-
 #illustration
   background-color: #f8f9fa
   display: block
@@ -20,20 +7,3 @@
   width: 188px
   height: 181px
   margin: 0 auto
-
-#header
-  font-size: 20px
-  font-weight: bold
-
-#button
-  text-align:center
-  a
-    border-radius: 2px
-    display: inline-block
-    background: #a0d468
-    padding: 10px 22px
-    color: #fff
-    text-align: center
-    margin: 0 auto
-    font-weight: bold
-    font-size: 16px
