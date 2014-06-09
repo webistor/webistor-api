@@ -1,7 +1,33 @@
-Hello,
+<html>
+  <head></head>
+  <body>
 
-you have requested an invite to Webistor, and we noticed you have already been invited
-{{#if invitation.author.username}} by{{invitation.author.username}}{{/if}}!
+    <div id="container">
 
-All you have to do is finish your account over at:
-http://www.webistor.net/register/{{invitation.token}}
+      <div id="inner">
+
+        <h1 id="header">Enthousiasm! You can use Webistor now.</h1>
+
+        <p>
+          You have requested an invite to Webistor, and we noticed you have already been invited
+          {{#if invitation.author.username}} by {{invitation.author.username}}{{/if}}!
+        </p>
+
+        <p>
+          All you have to do is finish your account over by clicking the button below:
+        </p>
+
+        <p id="button">
+          <a href="http://www.webistor.net/register/{{invitation.token}}" target="_blank">
+            Create your account
+          </a>
+        </p>
+
+        <p class="bold"> - The Webistor team</p>
+
+      </div>
+
+    </div>
+
+  </body>
+</html>
