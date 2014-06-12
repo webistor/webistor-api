@@ -94,7 +94,9 @@ module.exports = class EntryController extends Controller
     # Find tag ID's.
     tagPromise = Promise.try ->
       return false unless search.tags.length > 0
-      Tag.findAsync {author:req.session.userId, title:$in:search.tags}, {lean:true}
+      tagConditions = {author:req.session.userId, title:$in:search.tags}
+      tagConditions.$text = ts if ts?
+      Tag.findAsync tagConditions, {lean:true}
       .then (tags) -> tags.map (t) -> t._id
 
     # Add a condition to filter by tags if needed.

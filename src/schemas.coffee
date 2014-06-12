@@ -50,7 +50,9 @@ schemas =
     userShare:    type: [ObjectId], ref: 'user'
     groupShare:   type: [ObjectId], ref: 'group'
     publicShare:  type: Boolean, default: false
-    title:        type: String, trim: true, match: /^.{1,255}$/
+    title:        type: String, trim: true, validate: [
+      /^.{0,255}$/, "The entry title can not be longer than 255 characters."
+    ]
     url:          type: String
     description:  type: String
     tags:         type: [ObjectId], ref: 'tag'
@@ -58,7 +60,9 @@ schemas =
   # The Tag schema.
   Tag: Schema
     author: type: ObjectId, ref: 'user', index: true
-    title:  type: String, trim: true, match: /^[\w\s]{1,255}$/
+    title:  type: String, trim: true, validate: [
+      /^.{1,48}$/, "A tag must contain between one and 48 characters."
+    ]
     color:  type: String, match: /^[0-9A-F]{6}$/
     # Warning! The following property can stale and should therefore not be relied upon.
     num:    type: Number, default: 0
@@ -76,6 +80,7 @@ schemas.User.method 'countInvitations', (cb) -> @model('invitation').count {auth
 
 # Add text indexes for text-search support.
 schemas.Entry.index {title:'text', description:'text'}, {default_language: 'en'}
+schemas.Tag.index {title:'text'}, {default_language: 'en'}
 
 # This method can be relied upon to return the actual number of entries.
 schemas.Tag.method 'countEntries', (cb) -> @model('tag').count {tags:@id}, cb
