@@ -35,8 +35,14 @@ module.exports = class TagController extends Controller
         throw new ServerError 400, "Not all tags found in the database." unless stag?
         Promise.promisifyAll stag.set ltag
 
+    # Validate all the tags.
+    .then (tags) ->
+      Promise.map tags, (tag) -> tag.validateAsync()
+      .return tags
+
     # Save all the tags.
-    .then (tags) -> Promise.map tags, (tag) -> tag.saveAsync().get 0
+    .then (tags) ->
+      Promise.map tags, (tag) -> tag.saveAsync().get 0
 
   ###*
    * Add the number of entries which use this tag to the response body.
