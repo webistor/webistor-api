@@ -63,8 +63,8 @@ install node without sudo, which can prevent some access problems later on.
 ### Testing
 
 Write your tests in `/test/<path>`. The convention is to make <path> the same as the path
-to the file that you're testing in `/src/<path>`. Generic tests may be placed
-in `test/<name>.coffee`, but should be avoided.
+to the file that you're testing in `/src/<path>`. Super tests are placed in
+`test/<name>.coffee`.
 
 More about creating tests can be found in the documentation below. Tests look like this:
 
