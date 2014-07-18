@@ -208,7 +208,9 @@ module.exports = class SessionController extends Controller
     .then -> user = Promise.promisifyAll new User req.body
 
     # Validate given data.
-    .then -> user.validateAsync()
+    .then ->
+      throw new ServerError 400, "No password given." unless req.body.password?
+      user.validateAsync()
 
     # Proceed by checking if the username is taken or not.
     .then -> User.findOneAsync {username:user.username}
