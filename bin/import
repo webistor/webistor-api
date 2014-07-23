@@ -138,13 +138,12 @@ migrate = (database) ->
     db.queryAsync "SELECT id, email, username FROM #{c 'users'}"
     .spread (rows) ->
       log.dbg "#{rows.length} Users are being imported."
-      promises = []
 
       # Iterate results.
-      for row in rows then do (row) ->
+      Promise.map rows, (row) ->
 
         # Start the promise chain by detecting if the user is already present in the database.
-        promise = Promise.try ->
+        Promise.try ->
           return if drop
           User.findAsync $or:[ {email:row.email}, {username:row.username} ]
           .then (results) ->
@@ -165,11 +164,7 @@ migrate = (database) ->
         .then -> log.dbg "Successfully imported #{row.email}."
         .catch (ex) -> log.dbg "Skipped #{row.email}: #{ex}"
 
-        # Add operation to promise pool.
-        promises.push promise
-
       # Wait for the entire promise pool to have settled.
-      Promise.settle promises
       .then -> log.inf "Completed user import."
 
   # Then import tags. They need to come before entries so that we'll have an id map for relations.
@@ -179,14 +174,12 @@ migrate = (database) ->
     db.queryAsync "SELECT * FROM #{w 'tags'}"
     .spread (rows) ->
       log.dbg "#{rows.length} Tags are being imported."
-      promises = []
 
       # Iterate results.
-      Promise.all rows, (row) ->
-      for row in rows then do (row) ->
+      Promise.map rows, (row) ->
 
         # Start the promise chain by detecting if the tag is already present in the database.
-        promise = Promise.try ->
+        Promise.try ->
           throw new Error "Could not find author #{row.user_id}." unless maps.users[row.user_id]?
           return if drop
           Tag.findOneAsync author: maps.users[row.user_id], title: row.title
@@ -204,11 +197,7 @@ migrate = (database) ->
         .then -> log.dbg "Successfully imported '#{row.title}'-tag."
         .catch (ex) -> log.dbg "Skipped '#{row.title}'-tag: #{ex}"
 
-        # Add operation to promise pool.
-        promises.push promise
-
       # Wait for the entire promise pool to have settled.
-      Promise.settle promises
       .then -> log.inf "Completed tag import."
 
   # Then import entries.
