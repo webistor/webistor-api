@@ -19,6 +19,12 @@ Promise.onUnhandledRejectionHandled (promise) ->
   break for rejection, index in rejections when rejection.promise is promise
   rejections.splice index, 1
 
+handleRejections = -> new Promise (resolve, reject) ->
+  resolve() unless rejections.length > 0
+  log.err rejection.ex for rejection in rejections
+  reject new Error "#{rejections.length} Unhandled rejections have been logged."
+  rejections = []
+
 # Promisification.
 Promise.promisifyAll User
 Promise.promisifyAll Entry
@@ -57,12 +63,6 @@ defaults =
   merge: false
   verbose: 0
   prefix: 'mk'
-
-handleRejections = -> new Promise (resolve, reject) ->
-  resolve() unless rejections.length > 0
-  log.err rejection.ex for rejection in rejections
-  reject new Error "#{rejections.length} Unhandled rejections have been logged."
-  rejections = []
 
 migrate = (database) ->
 
@@ -263,7 +263,7 @@ migrate = (database) ->
       .then -> log.inf "Completed entry import."
 
   # Wait for the connection to finish processing queries.
-  .finally -> db.endAsync()
+  .then -> db.endAsync()
 
   # Log errors.
   .catch (ex) ->
