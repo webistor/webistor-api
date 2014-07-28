@@ -8,6 +8,7 @@ schemas = require '../schemas'
 {mongoose} = schemas
 User = Promise.promisifyAll schemas.User
 Invitation = Promise.promisifyAll schemas.Invitation
+Mail = require '../classes/mail'
 config = require '../config'
 
 module.exports = class SessionController extends Controller
@@ -15,11 +16,20 @@ module.exports = class SessionController extends Controller
   authFactory: null
 
   ###*
+   * An array of user id's that belong to users that have just been notified about the
+   * migration when making a log-in attempt. Used to throttle the amount of emails sent.
+   *
+   * @type {Array}
+  ###
+  migrationNoticeTimeouts: null
+
+  ###*
    * Construct a session controller.
    *
    * @param {AuthFactory} @authFactory The AuthFactory instance to use for authentication.
   ###
   constructor: (@authFactory) ->
+    @migrationNoticeTimeouts = []
 
   ###*
    * Promise a user document based on the session.
@@ -86,14 +96,13 @@ module.exports = class SessionController extends Controller
   login: (req) ->
 
     # Figure out by what means to find the user.
-    find = if 'username' of req.body
-      {username: req.body.username.toLowerCase()}
-    else if 'email' of req.body
-      {email: req.body.email.toLowerCase()}
-    else if 'login' of req.body
-      login = req.body.login.toLowerCase()
-      {$or: [{email: login}, {username: login}]}
-    else false
+    find = switch
+      when 'username' of req.body then username: req.body.username.toLowerCase()
+      when 'email' of req.body then email: req.body.email.toLowerCase()
+      when 'login' of req.body
+        login = req.body.login.toLowerCase()
+        $or: [{email: login}, {username: login}]
+      else false
 
     # If we have no means to find the user.
     throw new ServerError 400, "No username or email address given." unless find
@@ -106,6 +115,30 @@ module.exports = class SessionController extends Controller
       return user if user
       Promise.delay Math.random()*25 + 55
       .throw new AuthError AuthError.MISSMATCH, "User not found."
+
+    # Ensure the user has a password. This might not be the case if they were imported from 0.4.
+    .then (user) =>
+      return user if user.password
+
+      # Send the user an email, unless we just did that.
+      Promise.try =>
+        return if user.id in @migrationNoticeTimeouts
+        (new Mail)
+        .to user
+        .from "Webistor Team <hello@webistor.net>"
+        .subject "Webistor has updated!"
+        .template "account/migration-notice", user.toObject()
+        .send()
+        .then =>
+          @migrationNoticeTimeouts.push user.id
+          setTimeout (=>
+            @migrationNoticeTimeouts.splice (@migrationNoticeTimeouts.indexOf user.id), 1
+          ), 1000*60*5
+
+      # Tell the user what happened and abort.
+      .throw new ServerError 401, "
+        You need to set a new password before being able to log in. We've just sent you an
+        email with the details. Our apologies for the inconvenience."
 
     # Authenticate the user.
     .then (user) =>
