@@ -98,7 +98,8 @@ ensureLogin = server.sessionController.getMiddleware 'ensureLogin'
 ensureOwnership = server.sessionController.getMiddleware 'ensureOwnership'
 
 # Route: Set up entry REST routes.
-server.db.Entry.methods ['post', 'put', 'delete']
+server.db.Entry.methods ['get', 'post', 'put', 'delete']
+server.db.Entry.before 'get', ensureOwnership
 server.db.Entry.before 'post', ensureOwnership
 server.db.Entry.before 'put', ensureOwnership
 server.db.Entry.before 'delete', ensureOwnership
