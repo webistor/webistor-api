@@ -89,9 +89,11 @@ server.post '/users/me', server.sessionController.getMiddleware 'login'
 server.delete '/users/me', server.sessionController.getMiddleware 'logout'
 server.get '/session/loginCheck', server.sessionController.getMiddleware 'isLoggedIn'
 server.post '/session/nameCheck', server.sessionController.getMiddleware 'usernameExists'
+server.post '/password-reset', server.sessionController.getMiddleware 'sendPasswordToken'
 
 # TODO: Protect this request with anti-botting measures.
 server.post '/users', server.sessionController.getMiddleware 'register'
+server.post '/users/:id/password-reset', server.sessionController.getMiddleware 'resetPassword'
 
 # Shared middleware.
 ensureLogin = server.sessionController.getMiddleware 'ensureLogin'
