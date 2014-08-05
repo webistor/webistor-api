@@ -97,7 +97,7 @@ module.exports = class InvitationController extends Controller
       log.dbg "Failed to create invitation request for #{req.body.email}: #{err.message}"
 
     # Send the response.
-    .then -> res.send 201, {email:req.body.email}
+    .then -> res.status(201).send(email:req.body.email)
 
   ###*
    * The logged in user expends an invitation "coupon" in order to invite a friend.
