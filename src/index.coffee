@@ -33,6 +33,20 @@ log.setLevel config.logLevel
 # Instantiate client application-server.
 client = express()
 
+# Content Security Policy.
+client.use (req, res, next) ->
+  res.header 'Content-Security-Policy', [
+    "default-src 'none'"
+    "style-src 'self' http://fonts.googleapis.com/ http://netdna.bootstrapcdn.com/"
+    "font-src 'self' http://themes.googleusercontent.com/ http://netdna.bootstrapcdn.com/"
+    "script-src 'self' 'unsafe-eval'"
+    "img-src 'self'"
+    "connect-src http://api.#{config.domainName}:#{config.httpPort}/" + (
+      if config.debug then " ws://localhost:9485/ http://localhost:#{config.serverPort}" else ''
+    )
+  ].join(';\n')
+  next()
+
 # Set up shared middleware.
 client.use favicon
 
