@@ -24,6 +24,7 @@
     "lodash": "~2",
     "mongodb": "*",
     "mongoose": "~3",
+    "mysql": "^2.4.0",
     "node-logging": "*",
     "node-restful": "*",
     "nodemailer": "~0.6",

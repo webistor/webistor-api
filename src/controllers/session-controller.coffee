@@ -5,14 +5,34 @@ AuthError = require '../classes/auth-error'
 ServerError = require './base/server-error'
 log = require 'node-logging'
 schemas = require '../schemas'
-{mongoose} = schemas
-User = Promise.promisifyAll schemas.User
-Invitation = Promise.promisifyAll schemas.Invitation
+{mongoose, User, Invitation} = schemas
+Mail = require '../classes/mail'
 config = require '../config'
+
+# Promisification.
+Promise.promisifyAll User
+Promise.promisifyAll User.prototype
+Promise.promisifyAll Invitation
+Promise.promisifyAll Invitation.prototype
 
 module.exports = class SessionController extends Controller
 
   authFactory: null
+
+  ###*
+   * An array of user id's that belong to users that have just been notified about the
+   * migration when making a log-in attempt. Used to throttle the amount of emails sent.
+   *
+   * @type {Array}
+  ###
+  migrationNoticeTimeouts: null
+
+  ###*
+   * A mapping of user id's to Auth objects which keep track of password reset tokens.
+   *
+   * @type {Object}
+  ###
+  passwordTokenAuth: null
 
   ###*
    * Construct a session controller.
@@ -20,6 +40,8 @@ module.exports = class SessionController extends Controller
    * @param {AuthFactory} @authFactory The AuthFactory instance to use for authentication.
   ###
   constructor: (@authFactory) ->
+    @migrationNoticeTimeouts = []
+    @passwordTokenAuth = {}
 
   ###*
    * Promise a user document based on the session.
@@ -86,14 +108,13 @@ module.exports = class SessionController extends Controller
   login: (req) ->
 
     # Figure out by what means to find the user.
-    find = if 'username' of req.body
-      {username: req.body.username.toLowerCase()}
-    else if 'email' of req.body
-      {email: req.body.email.toLowerCase()}
-    else if 'login' of req.body
-      login = req.body.login.toLowerCase()
-      {$or: [{email: login}, {username: login}]}
-    else false
+    find = switch
+      when 'username' of req.body then username: req.body.username.toLowerCase()
+      when 'email' of req.body then email: req.body.email.toLowerCase()
+      when 'login' of req.body
+        login = req.body.login.toLowerCase()
+        $or: [{email: login}, {username: login}]
+      else false
 
     # If we have no means to find the user.
     throw new ServerError 400, "No username or email address given." unless find
@@ -106,6 +127,30 @@ module.exports = class SessionController extends Controller
       return user if user
       Promise.delay Math.random()*25 + 55
       .throw new AuthError AuthError.MISSMATCH, "User not found."
+
+    # Ensure the user has a password. This might not be the case if they were imported from 0.4.
+    .then (user) =>
+      return user if user.password
+
+      # Send the user an email, unless we just did that.
+      Promise.try =>
+        return if user.id in @migrationNoticeTimeouts
+        (new Mail)
+        .to user
+        .from "Webistor Team <hello@webistor.net>"
+        .subject "Webistor was updated!"
+        .template "account/migration-notice", user.toObject()
+        .send()
+        .then =>
+          @migrationNoticeTimeouts.push user.id
+          setTimeout (=>
+            @migrationNoticeTimeouts.splice (@migrationNoticeTimeouts.indexOf user.id), 1
+          ), 1000*60*5
+
+      # Tell the user what happened and abort.
+      .throw new ServerError 401, "
+        You need to set a new password before being able to log in. We've just sent you an
+        email with the details. Our apologies for the inconvenience."
 
     # Authenticate the user.
     .then (user) =>
@@ -150,8 +195,7 @@ module.exports = class SessionController extends Controller
       if err.reason is AuthError.MISSMATCH
         throw new ServerError 401, "
           Invalid username/email or password/token. Please note that your account will be
-          locked out after too many attempts and you will not be able to log in or use the
-          password forgotten function for an hour."
+          locked out after too many attempts and you will not be able to log in for an hour."
 
       # Expired authentication token.
       if err.reason is AuthError.MISSING
@@ -205,10 +249,12 @@ module.exports = class SessionController extends Controller
       throw new ServerError 403, "Invalid invitation token." unless result and token? and result.token is token
 
     # Create the user.
-    .then -> user = Promise.promisifyAll new User req.body
+    .then -> user = new User req.body
 
     # Validate given data.
-    .then -> user.validateAsync()
+    .then ->
+      throw new ServerError 400, "No password given." unless req.body.password?
+      user.validateAsync()
 
     # Proceed by checking if the username is taken or not.
     .then -> User.findOneAsync {username:user.username}
@@ -259,3 +305,91 @@ module.exports = class SessionController extends Controller
     throw new ServerError 404, "User wasn't logged in." unless @isLoggedIn req
     delete req.session.userId
     return "Successfully logged out."
+
+  ###*
+   * Send a password reset token to a given email address.
+   *
+   * The email address is obtained from the JSON body as "email".
+   *
+   * If the email address does not belong to any registered user, we send them an email
+   * telling them they may want to sign up.
+   *
+   * The generated token is only usable for up to an hour after creation.
+   *
+   * @param {http.IncomingMessage} req The Express request object.
+   * @param {String} req.body.email The email address to send a token to.
+   *
+   * @return {String} Status message.
+  ###
+  sendPasswordToken: (req) ->
+    throw new ServerError 400, "No email address given." unless req.body.email
+
+    # Detect if the email address is in our database.
+    User.findOneAsync email:req.body.email
+    .then (user) =>
+
+      # If the user doesn't exist. Send them a mail to relief them of their confusion.
+      unless user
+        return (new Mail)
+        .to req.body.email
+        .from "Webistor Team <hello@webistor.net>"
+        .subject "You have no account here"
+        .template 'account/confused-newcomer', email:req.body.email
+        .send()
+
+      # Get or create the password token authentication object for the user.
+      auth = @passwordTokenAuth[user.id] or= @authFactory.create user, => delete @passwordTokenAuth[user.id]
+
+      # Generate a token with which they can reset their password.
+      token = auth.generateToken()
+
+      # Send them the token.
+      (new Mail)
+      .to user
+      .from "Webistor Team <hello@webistor.net>"
+      .subject "Your password reset ticket"
+      .template "account/password-token", {user, token}
+      .send()
+
+    # Done.
+    .return "Mail sent."
+
+  ###*
+   * Reset the password of the given user to the given password.
+   *
+   * @param {http.IncomingMessage} req The Express request object.
+   * @param {String} req.body.id The user id.
+   * @param {String} req.body.password The new password.
+   * @param {String} req.body.token A valid password reset token.
+   *
+   * @return {String} Status message.
+  ###
+  resetPassword: (req) ->
+
+    # Ensure the data is present.
+    id = req.body.id or throw new ServerError 400, "User ID missing."
+    token = req.body.token or throw new ServerError 400, "Token missing."
+    password = req.body.password or throw new ServerError 400, "Password missing."
+
+    # Ensure the token is present and usable.
+    unless @passwordTokenAuth[id]? and not @passwordTokenAuth[id].isExpired()
+      throw new ServerError 401, "The token you are using is not present on the server. In
+        most cases this means that the token has expired. You can only use a reset token
+        for up to an hour after generating it."
+
+    # Validate the token.
+    (auth = @passwordTokenAuth[id]).authenticateToken token
+
+    # If the token is valid, find the user.
+    .then -> User.findByIdAsync id
+
+    # Set the users password and save.
+    .then (user) ->
+      user.set 'password', password
+      user.saveAsync()
+
+    # Authenticate the user. They just provided a password that is now valid.
+    .then -> req.session.userId = id
+
+    # All done.
+    .return "Password updated."

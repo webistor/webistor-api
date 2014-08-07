@@ -1,0 +1,107 @@
+<html>
+  <head></head>
+  <body>
+
+    <div id="container">
+
+      <div id="inner">
+
+        <h1 id="header">Webistor has updated</h1>
+
+        <h2>tl;dr</h2>
+
+        <p>
+          Webistor has had a big server update and is now much cooler. However, we do need
+          you to reset your password for reasons explained below.
+        </p>
+
+        <p class="button">
+          <a href="http://www.webistor.net/password-reset/{{email}}" target="_blank">
+            Reset your password
+          </a>
+        </p>
+
+        <h2>What's changed?</h2>
+
+        <h3>Not good enough. Start over.</h3>
+
+        <p>
+          We've rewritten the server software running Webistor from scratch. We've
+          switched from using a general PHP framework which wasn't entirely fit for
+          purpose to using a fully tailored NodeJS program. We've also made many
+          optimisations in the client application in the process of adjusting it to the
+          new server software.
+        </p>
+
+        <h3>New features.</h3>
+
+        <p>
+          Though most of our time went into creating the new server software, we have
+          spent some time to implement new features.
+        </p>
+
+        <h2>What does this mean for me?</h2>
+
+        <h3>Speed! Power!</h3>
+
+        <p>
+          Having the tailored server software means that there's nothing more happening
+          than needed. This has greatly improved server-communication speed. The
+          optimisations made in the client application are contributing to a smoother
+          experience. Altogether Webistor should be and feel a lot faster!
+        </p>
+
+        <h2>More security.</h2>
+
+        <p>
+          The new server employs an array of technologies that should make your account
+          less prone to being stolen and the website less prone to being a victim of
+          a cyber-attack.
+        </p>
+
+        <h3>Account migration.</h3>
+
+        <p>
+          We've migrated your account to the new server, along with all of your tags and
+          entries. Any entries you may have had that shared the same URI have been merged
+          together, this will affect very few users and should not cause any problems.
+        </p>
+
+        <p>
+          Because the new server uses an improved password hashing algorithm, we couldn't
+          migrate your passwords. Therefore we require everyone to do a one-time password
+          reset. Use the button below to start this process.
+        </p>
+
+        <p class="button">
+          <a href="http://www.webistor.net/password-reset/{{email}}" target="_blank">
+            Reset your password
+          </a>
+        </p>
+
+        <h3>The new stuff.</h3>
+
+        <p>
+          Some of the new features include:
+        </p>
+
+        <ul>
+          <li>Search for a specific tag by including the hash symbol (#) in the search-bar.</li>
+          <li>Recover your lost password.</li>
+          <li>Edit your account details, like user name or password.</li>
+        </ul>
+
+        <hr />
+
+        <p>
+          As with every one of our emails, just hit reply and we'll respond right away! :)
+        </p>
+
+        <p class="bold"> - The Webistor team</p>
+
+      </div>
+
+    </div>
+
+  </body>
+</html>

@@ -102,6 +102,7 @@ Run tests using `cake test` or `cake --watch test` to continuously test.
 
 * [Commander](https://github.com/visionmedia/commander.js/): Argv parser and utilities.
 * [CLI Table](https://github.com/LearnBoost/cli-table): Unicode pretty table generator.
+* [MySQL](https://github.com/felixge/node-mysql): MySQL client for Node.
 
 ### Planned features
 

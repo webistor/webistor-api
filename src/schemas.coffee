@@ -21,7 +21,7 @@ schemas =
       /^[\w-_]{4,48}$/
       "Username must be between 4 and 48 characters and only contain letters, numbers dashes and underscores."
     ]
-    password: type: String, required: true, select: false, validate: [
+    password: type: String, select: false, validate: [
       /^.{4,128}$/, "Password must be between 4 and 128 characters."
     ]
     friends:  type: [ObjectId], ref: 'user'
@@ -59,11 +59,11 @@ schemas =
 
   # The Tag schema.
   Tag: Schema
-    author: type: ObjectId, ref: 'user', index: true
+    author: type: ObjectId, ref: 'user', index: true, required: true
     title:  type: String, trim: true, validate: [
       /^.{1,48}$/, "A tag must contain between one and 48 characters."
     ]
-    color:  type: String, match: /^[0-9A-F]{6}$/
+    color:  type: String, uppercase: true, match: /^[0-9A-F]{6}$/
     # Warning! The following property can stale and should therefore not be relied upon.
     num:    type: Number, default: 0
 
