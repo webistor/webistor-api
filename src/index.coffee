@@ -147,18 +147,43 @@ server.listen config.serverPort if config.serverPort
 
 
 ##
-## PROXY
+## DAEMON
 ##
 
-# Create a super simple "proxy" server.
-proxy = http.createServer (req) ->
-  root = config.domainName
-  switch req.headers.host.split(':')[0]
-    when root, "www.#{root}" then client arguments...
-    when "api.#{root}" then server arguments...
+# Only perform daemon related setup if enabled.
+if config.daemon?.enabled
 
-# Attempt to listen on the HTTP port.
-proxy.listen config.httpPort if config.httpPort
+  # Better not have debug mode enabled past this point.
+  log.err "WARNING: Ensure debug mode is disabled in a production environment." if config.debug
 
-# Export our servers.
-module.exports = {client, server, proxy} if config.debug
+  # Create a simple "proxy" server which will forward requests made to the daemon port
+  # to the right express server.
+  proxy = http.createServer (req) ->
+    root = config.domainName
+    switch req.headers.host.split(':')[0]
+      when root, "www.#{root}" then client arguments...
+      when "api.#{root}" then server arguments...
+
+  # Listen on the set http port. Downgrade process permissions once set up.
+  proxy.listen config.daemon.httpPort, ->
+    process.setgid config.daemon.gid
+    process.setuid config.daemon.uid
+
+  # Create an admin server.
+  admin = express()
+
+  # Bring the application to an idle state.
+  admin.get '/shutdown', (req, res) ->
+    server.db.disconnect client.close server.close proxy.close admin.close -> res.status(200).end()
+
+  # Listen on admin port.
+  admin.listen config.daemon.adminPort
+
+
+
+##
+## EXPORTS
+##
+
+# Export our servers when in debug mode.
+module.exports = {client, server, proxy, admin} if config.debug
