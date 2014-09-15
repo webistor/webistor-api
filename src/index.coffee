@@ -158,11 +158,14 @@ if config.daemon?.enabled
 
   # Create a simple "proxy" server which will forward requests made to the daemon port
   # to the right express server.
-  proxy = http.createServer (req) ->
+  proxy = http.createServer (req, res) ->
     root = config.domainName
-    switch req.headers.host.split(':')[0]
+    host = req.headers.host.split(':')[0]
+    switch host
       when root, "www.#{root}" then client arguments...
       when "api.#{root}" then server arguments...
+      else res.status(400).send("
+        Host #{host} not recognized. This might be due to bad server configuration.");
 
   # Listen on the set http port. Downgrade process permissions once set up.
   proxy.listen config.daemon.httpPort, ->
