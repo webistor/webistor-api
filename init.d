@@ -55,21 +55,12 @@
 # SPIN_SLEEP_TIME="2000"
 
 NAME="Webistor"
-NODE_BIN_DIR="/usr/local/node/bin"
-NODE_PATH="/usr/local/lib/node_modules"
-SOURCE_DIR="/home/node/websitor/api"
-APPLICATION_PATH=$SOURCE_DIR/lib/index.js
+SOURCE_DIR="/home/node/webistor/api"
+APPLICATION_PATH="$SOURCE_DIR/lib/index.js"
 PIDFILE="/var/run/webistor.pid"
 LOGFILE="/var/log/webistor.log"
 MIN_UPTIME="5000"
 SPIN_SLEEP_TIME="2000"
-
-# Add node to the path for situations in which the environment is passed.
-PATH=$NODE_BIN_DIR:$PATH
-# Export all environment variables that must be visible for the Node.js
-# application process forked by Forever. It will not see any of the other
-# variables defined in this script.
-export NODE_PATH=$NODE_PATH
 
 start() {
   echo "Starting $NAME"
