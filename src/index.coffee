@@ -164,8 +164,13 @@ if config.daemon?.enabled
     switch host
       when root, "www.#{root}" then client arguments...
       when "api.#{root}" then server arguments...
-      else res.status(400).send("
-        Host #{host} not recognized. This might be due to bad server configuration.");
+      else do ->
+        body = "Host #{host} not recognized. This might be due to bad server configuration."
+        res.writeHead 400, "Invalid host.", {
+          'Content-Length': body.length
+          'Content-Type': 'text/plain'
+        }
+        res.end body
 
   # Listen on the set http port. Downgrade process permissions once set up.
   proxy.listen config.daemon.httpPort, ->
