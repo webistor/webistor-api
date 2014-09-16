@@ -10,8 +10,11 @@ apt-get install nodejs
 # Install MongoDB.
 apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
 echo 'deb http://downloads-distro.mongodb.org/repo/debian-sysvinit dist 10gen' | tee /etc/apt/sources.list.d/mongodb.list
-sudo apt-get update
-sudo apt-get install mongodb-org
+apt-get update
+apt-get install mongodb-org
+
+# Install mail server.
+apt-get install postfix
 
 # Create Node user.
 UNAME=node

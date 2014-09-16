@@ -79,7 +79,7 @@ server.use (req, res, next) ->
   next()
 
 # Serve a public folder for assets like images used in emails.
-server.use serveStatic '/public'
+server.use '/public', serveStatic './public'
 
 # Parse request body as JSON.
 server.use json strict:true
