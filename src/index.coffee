@@ -52,7 +52,7 @@ client.use favicon
 
 # Set up routing to serve up static files from the /public folder, or index.html.
 client.use serveStatic config.publicHtml
-client.get '*', (req, res) -> res.sendfile "#{config.publicHtml}/index.html"
+client.get '*', (req, res) -> res.sendFile "#{config.publicHtml}/index.html"
 
 # Start listening on the client port.
 client.listen config.clientPort if config.clientPort
@@ -78,8 +78,8 @@ server.use (req, res, next) ->
       return res.end()
   next()
 
-# Set up shared middleware.
-# server.use favicon
+# Serve a public folder for assets like images used in emails.
+server.use serveStatic '/public'
 
 # Parse request body as JSON.
 server.use json strict:true
