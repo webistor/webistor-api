@@ -1,107 +1,554 @@
-<html>
-  <head></head>
-  <body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Webistor Has Updated</title>
+    <style type="text/css">
+    
+    /* /\/\/\/\/\/\/\/\/ CLIENT-SPECIFIC STYLES /\/\/\/\/\/\/\/\/ */
+    
+    #outlook a{padding:0;} /* Force Outlook to provide a "view in browser" message */
+    .ReadMsgBody{width:100%;} .ExternalClass{width:100%;} /* Force Hotmail to display emails at full width */
+    .ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td, .ExternalClass div {line-height: 100%;} /* Force Hotmail to display normal line spacing */
+    body, table, td, p, a, li, blockquote{-webkit-text-size-adjust:100%; -ms-text-size-adjust:100%;} /* Prevent WebKit and Windows mobile changing default text sizes */
+    table, td{mso-table-lspace:0pt; mso-table-rspace:0pt;} /* Remove spacing between tables in Outlook 2007 and up */
+    img{-ms-interpolation-mode:bicubic;} /* Allow smoother rendering of resized image in Internet Explorer */
 
-    <div id="container">
+    /* /\/\/\/\/\/\/\/\/ RESET STYLES /\/\/\/\/\/\/\/\/ */
+    body{margin:0; padding:0;}
+    img{border:0; height:auto; line-height:100%; outline:none; text-decoration:none;}
+    table{border-collapse:collapse !important;}
+    body, #bodyTable, #bodyCell{height:100% !important; margin:0; padding:0; width:100% !important;}
 
-      <div id="inner">
+    /* /\/\/\/\/\/\/\/\/ TEMPLATE STYLES /\/\/\/\/\/\/\/\/ */
 
-        <h1 id="header">Webistor has updated</h1>
+    /* ========== Page Styles ========== */
 
-        <h2>tl;dr</h2>
+    #bodyCell{padding:60px;}
+    #templateContainer{width:626px;}
+    /*td {border:1px solid black;}*/
 
-        <p>
-          Webistor has had a big server update and is now much cooler. However, we do need
-          you to reset your password for reasons explained below.
-        </p>
+    body, #bodyTable{
+      background-color:#f8f9fa;
+    }
 
-        <p class="button">
-          <a href="http://www.webistor.net/password-reset/{{email}}" target="_blank">
-            Reset your password
-          </a>
-        </p>
+    #bodyCell{
+      border-top:4px solid #f8f9fa;
+    }
 
-        <h2>What's changed?</h2>
+    #templateContainer{
+      border:1px solid #eaeaea;
+    }
 
-        <h3>Not good enough. Start over.</h3>
+    h1{
+      color:#67737a !important;
+      display:block;
+      font-family:Helvetica;
+      font-size:39px;
+      font-style:normal;
+      font-weight:bold;
+      line-height:100%;
+      letter-spacing:normal;
+      margin-top:41px;
+      margin-right:0;
+      margin-bottom:41px;
+      margin-left:0;
+      text-align:center;
+    }
 
-        <p>
-          We've rewritten the server software running Webistor from scratch. We've
-          switched from using a general PHP framework which wasn't entirely fit for
-          purpose to using a fully tailored NodeJS program. We've also made many
-          optimisations in the client application in the process of adjusting it to the
-          new server software.
-        </p>
+    h2{
+      color:#67737a !important;
+      display:block;
+      font-family:Helvetica;
+      font-size:20px;
+      font-style:normal;
+      font-weight:bold;
+      line-height:23px;
+      letter-spacing:normal;
+      margin-top:0;
+      margin-right:0;
+      margin-bottom:10px;
+      margin-left:0;
+      text-align:center;
+    }
 
-        <h3>New features.</h3>
+    h3{
+      color:#e2755f !important;
+      display:block;
+      font-family:Helvetica;
+      font-size:16px;
+      font-weight:bold;
+      font-style:normal;
+      line-height:100%;
+      letter-spacing:normal;
+      margin-top:0;
+      margin-right:0;
+      margin-bottom:10px;
+      margin-left:0;
+      text-align:left;
+    }
 
-        <p>
-          Though most of our time went into creating the new server software, we have
-          spent some time to implement new features.
-        </p>
+/* ========== Header Styles ========== */
 
-        <h2>What does this mean for me?</h2>
+    #templateHeader{
+      background-color:#F4F4F4;
+    }
 
-        <h3>Speed! Power!</h3>
+    .headerContent{
+      color:#505050;
+      font-family:Helvetica;
+      font-size:20px;
+      font-weight:bold;
+      line-height:100%;
+      padding-top:0;
+      padding-right:0;
+      padding-bottom:0;
+      padding-left:0;
+      text-align:left;
+      vertical-align:middle;
+    }
 
-        <p>
-          Having the tailored server software means that there's nothing more happening
-          than needed. This has greatly improved server-communication speed. The
-          optimisations made in the client application are contributing to a smoother
-          experience. Altogether Webistor should be and feel a lot faster!
-        </p>
+    .headerContent a:link, .headerContent a:visited, /* Yahoo! Mail Override */ .headerContent a .yshortcuts /* Yahoo! Mail Override */{
+      color:#EB4102;
+      font-weight:normal;
+      text-decoration:underline;
+    }
 
-        <h2>More security.</h2>
+    #headerImage{
+      height:auto;
+      max-width:626px;
+    }
+    
+    /* ========== Body Styles ========== */
+    
+    #templateBody{
+      background-color:#FFF;
+    }
+    
+    .bodyContent{
+      color:#4a4a4a;
+      font-family:Helvetica;
+      font-weight: 100;
+      font-size:16px;
+      line-height:23px;
+      /*padding-top:56px;*/
+      padding-right:56px;
+      /*padding-bottom:56px;*/
+      padding-left:56px;
+      text-align:center;
+    }
+      .bodyContent a:link, .bodyContent a:visited, /* Yahoo! Mail Override */ .bodyContent a .yshortcuts /* Yahoo! Mail Override */{
+        color:#EB4102;
+        font-weight:normal;
+        text-decoration:underline;
+        text-align: center;
+      }
+    
+    .sectionHead{
+      background:#fff url('http://api.webistor.net/public/heading.png') center no-repeat;
+    }
+    .sectionHeads.two{
+      background: url('http://api.webistor.net/public/heading2.png') center no-repeat;
+      bottom: 42px;
+    }
+    
+    ul{
+      margin: 0;
+      padding: 10px;
+      list-style: none;
+    }
+      li {
+        margin-bottom: 10px;
+      }
+    
+    /* ========== Column Styles ========== */
+    
+    #columnWrapper{
+      padding:0 56px 56px 56px;
+      background:#FFF;
+    }
+    
+    .templateColumnContainer{display:inline; width:248px;}
+    .templateColumnContaineIMG{display:inline; width:225px;}
+    
+    #templateColumns{
+      background-color:#FFF;
+    }
+    
+    .leftColumnContent{
+      color:#505050;
+      font-family:Helvetica;
+      font-size:14px;
+      line-height:23px;
+      padding-top:0;
+      padding-right:0;
+      padding-bottom:0;
+      padding-left:0;
+      text-align:left;
+      max-width: 254px;
+      min-height: 183px;
+    }
+      .leftColumnContent a:link, .leftColumnContent a:visited, /* Yahoo! Mail Override */ .leftColumnContent a .yshortcuts /* Yahoo! Mail Override */{
+        color:#EB4102;
+        font-weight:normal;
+        text-decoration:underline;
+      }
+    
+    .rightColumnContent{
+      color:#505050;
+      font-family:Helvetica;
+      font-size:14px;
+      line-height:23px;
+      padding-top:0;
+      /*padding-right:20px;*/
+      padding-bottom:0;
+      padding-left:0; 
+      text-align:left;
+      max-width: 254px;
+    }
+      .rightColumnContent a:link, .rightColumnContent a:visited, /* Yahoo! Mail Override */ .rightColumnContent a .yshortcuts /* Yahoo! Mail Override */{
+        color:#EB4102;
+        font-weight:normal;
+        text-decoration:underline;
+      }
+    
+    .leftColumnContent img, .rightColumnContent img{
+      display:inline;
+      height:auto;
+      max-width:225px;
+    }
+      .leftColumnContent img{
+        margin-right:0px;
+      }
+      .rightColumnContent img{
+        margin-left:0px;
+      }
+    
+    .fullColumn{
+      color:#505050;
+      font-family:Helvetica;
+      font-size:14px;
+      line-height:23px;
+      padding-top:0;
+      padding-right:20px;
+      padding-bottom:0;
+      padding-left:0; 
+      text-align:left;
+    }
+    
+    /* ========== Footer Styles ========== */
 
-        <p>
-          The new server employs an array of technologies that should make your account
-          less prone to being stolen and the website less prone to being a victim of
-          a cyber-attack.
-        </p>
+    #templateFooter{
+      background-color:#F4F4F4;
+      border-top:1px solid #FFFFFF;
+    }
 
-        <h3>Account migration.</h3>
+    .footerContent{
+      color:#808080;
+      font-family:Helvetica;
+      font-size:10px;
+      line-height:150%;
+      padding-top:20px;
+      padding-right:20px;
+      padding-bottom:20px;
+      padding-left:20px;
+      text-align:left;
+    }
 
-        <p>
-          We've migrated your account to the new server, along with all of your tags and
-          entries. Any entries you may have had that shared the same URI have been merged
-          together, this will affect very few users and should not cause any problems.
-        </p>
+    .footerContent a:link, .footerContent a:visited, /* Yahoo! Mail Override */ .footerContent a .yshortcuts, .footerContent a span /* Yahoo! Mail Override */{
+      color:#606060;
+      font-weight:normal;
+      text-decoration:underline;
+    }
+    
+    /* /\/\/\/\/\/\/\/\/ MOBILE STYLES /\/\/\/\/\/\/\/\/ */
+    
+    @media only screen and (max-width: 480px){
+    /* /\/\/\/\/\/\/ CLIENT-SPECIFIC MOBILE STYLES /\/\/\/\/\/\/ */
+    body, table, td, p, a, li, blockquote{-webkit-text-size-adjust:none !important;} /* Prevent Webkit platforms from changing default text sizes */
+    body{width:100% !important; min-width:100% !important;} /* Prevent iOS Mail from adding padding to the body */
+    
+    /* /\/\/\/\/\/\/ MOBILE RESET STYLES /\/\/\/\/\/\/ */
+    #bodyCell{padding:10px !important;}
+    
+    /* /\/\/\/\/\/\/ MOBILE TEMPLATE STYLES /\/\/\/\/\/\/ */
+    
+    /* ======== Page Styles ======== */
 
-        <p>
-          Because the new server uses an improved password hashing algorithm, we couldn't
-          migrate your passwords. Therefore we require everyone to do a one-time password
-          reset. Use the button below to start this process.
-        </p>
+    #templateContainer{
+      max-width:626px !important;
+      width:100% !important;
+    }
 
-        <p class="button">
-          <a href="http://www.webistor.net/password-reset/{{email}}" target="_blank">
-            Reset your password
-          </a>
-        </p>
+    h1{
+      font-size:24px !important;
+      line-height:100% !important;
+    }
 
-        <h3>The new stuff.</h3>
+    h2{
+      font-size:20px !important;
+      line-height:100% !important;
+    }
 
-        <p>
-          Some of the new features include:
-        </p>
+    h3{
+      font-size:18px !important;
+      line-height:100% !important;
+    }
 
-        <ul>
-          <li>Search for a specific tag by including the hash symbol (#) in the search-bar.</li>
-          <li>Recover your lost password.</li>
-          <li>Edit your account details, like user name or password.</li>
-        </ul>
+    h4{
+      font-size:16px !important;
+      line-height:100% !important;
+    }
+    
+    /* ======== Header Styles ======== */
+    
+    #templatePreheader{display:none !important;} /* Hide the template preheader to save space */
 
-        <hr />
+    #headerImage{
+      height:auto !important;
+      max-width:600px !important;
+      width:100% !important;
+    }
+    
+    .headerContent{
+      font-size:20px !important;
+      line-height:125% !important;
+    }
+    
+    /* ======== Body Styles ======== */
 
-        <p>
-          As with every one of our emails, just hit reply and we'll respond right away! :)
-        </p>
+    #bodyImage{
+      height:auto !important;
+      max-width:560px !important;
+      width:100% !important;
+    }
 
-        <p class="bold"> - The Webistor team</p>
+    .bodyContent{
+      text-align: center;
+      font-size:18px !important;
+      line-height:125% !important;
+    }
+    
+    /* ======== Column Styles ======== */
+    
+    .templateColumnContainer{display:block !important; width:100% !important;}
 
-      </div>
+    .columnImage{
+      height:auto !important;
+      max-width:260px !important;
+      width:100% !important;
+    }
 
-    </div>
+    .leftColumnContent{
+      font-size:16px !important;
+      line-height:125% !important;
+    }
+
+    .rightColumnContent{
+      font-size:16px !important;
+      line-height:125% !important;
+    }
+    
+    /* ======== Footer Styles ======== */
+
+    .footerContent{
+      font-size:14px !important;
+      line-height:115% !important;
+    }
+    
+    .footerContent a{display:block !important;} /* Place footer social and utility links on their own lines, for easier access */
+    }
+    </style>
+</head>
+<body leftmargin="0" marginwidth="0" topmargin="0" marginheight="0" offset="0">
+
+
+<center>
+  <table align="center" border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="bodyTable">
+    <tr>
+      <td align="center" valign="top" id="bodyCell">
+        <!-- BEGIN TEMPLATE // -->
+        <table border="0" cellpadding="0" cellspacing="0" id="templateContainer">
+          <tr>
+            <td align="center" valign="top">
+              <!-- BEGIN HEADER // -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" id="templateHeader">
+                <tr>
+                  <td valign="top" class="headerContent">
+                    <img src="http://api.webistor.net/public/top.png" style="max-width:626px;" id="headerImage" label="header_image" edit="header_image" allowdesigner allowtext />
+                  </td>
+                </tr>
+              </table>
+              <!-- // END HEADER -->
+            </td>
+          </tr>
+          <tr>
+            <td align="center" valign="top">
+              <!-- BEGIN BODY // -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" id="templateBody">
+                <tr>
+                  <td valign="top" class="bodyContent" edit="body_content00">
+                    <h1>Webistor Has Updated</h1>
+                    A big server update has hit Webistor which made things more awesome. However you'll need to reset your password to log in.
+                    <p style="padding:0;margin:0;"><a href="http://www.webistor.net/password-reset/{{email}}" target="_blank"><img src="http://api.webistor.net/public/knop.png" style="max-width:218px;padding:41px 0;" alt="Reset your password"></a></p>
+                  </td>
+                </tr>
+              </table>
+              <!-- // END BODY -->
+            </td>
+          </tr>
+          
+          <tr>
+            <td align="center" cellpadding="0" cellspacing="0" width="100%" class="sectionHead">
+              <h2>What has changed?</h2>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" valign="top" id="columnWrapper">
+              <!-- BEGIN COLUMNS // -->
+              <table border="0" cellpadding="20" cellspacing="0" width="100%" id="templateColumns">
+                <tr>
+                  <td align="left" valign="top" style="padding-bottom:0;">
+                    <table align="left" border="0" cellpadding="0" cellspacing="0" class="templateColumnContainerIMG">
+                      <tr>
+                        <td class="leftColumnContent">
+                          <img src="http://api.webistor.net/public/nodejs.png" style="max-width:225px;" class="columnImage" label="left_column_image" edit="left_column_image" />
+                        </td>
+                      </tr>
+                    </table>
+                    <table align="right" border="0" cellpadding="0" cellspacing="0" class="templateColumnContainer">
+                      <tr>
+                        <td valign="top" class="rightColumnContent" edit="right_column_content">
+                          <h3>Rewritten Server Software.</h3>
+                          Webistor has switched from a 
+                          general PHP framework to a fully 
+                          tailored NodeJS program. Also many optimisations in the client application have been made in the
+                          process of adjusting it to the new server 
+                          software.
+                        </td>
+                      </tr>
+                    </table>
+                    <table align="left" border="0" cellpadding="0" cellspacing="0" class="templateColumnContainer" style="clear: both;margin-top:25px;">
+                      <tr>
+                        <td valign="top" class="leftColumnContent">
+
+                          <h3>New Features.</h3>
+                          Alongside creating new server 
+                          software, we've implemented new 
+                          features
+                          
+                          <b>Including:</b>
+                          <ul style="padding-left:0;">
+                            <li style="margin-left:0;"><img src="http://api.webistor.net/public/label-small.png" style="margin-right:3px;position:relative;top:5px;"> Use # to search for specific tags.</li>
+                            <li><img src="http://api.webistor.net/public/label-small.png" style="margin-right:3px;position:relative;top:5px;"> Recover your lost password.</li>
+                          </ul>
+
+                        </td>
+                      </tr>
+                    </table>
+                    <table align="right" border="0" cellpadding="0" cellspacing="0" class="templateColumnContainerIMG">
+                      <tr>
+                        <td class="rightColumnContent">
+                          <img src="http://api.webistor.net/public/search.png" style="max-width:225px;" class="columnImage" label="left_column_image" 
+                          edit="left_column_image" />
+                        </td>
+                      </tr>
+                    </table>                                           
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" cellpadding="0" cellspacing="0" width="100%" class="sectionHeads two">
+                    <h2>What does this mean for me?</h2>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <table align="left" border="0" valign="middle" cellpadding="0" cellspacing="0" class="templateColumnContainerIMG" style="min-height:258px;">
+                      <tr>
+                        <td class="leftColumnContent">
+                          <img src="http://api.webistor.net/public/gauge.png" style="max-width:225px;" class="columnImage" label="left_column_image" edit="left_column_image" />
+                        </td>
+                      </tr>
+                    </table>
+                    <table align="right" border="0" cellpadding="0" cellspacing="0" class="templateColumnContainer">
+                      <tr>
+                        <td valign="top" class="rightColumnContent" edit="right_column_content">
+                          <h3>More speed &amp; power!</h3>
+                          Having the tailored server software means that there's nothing more happening than needed. 
+                          This has greatly improved server-communication speed. The optimisations made in the client application are contributing 
+                          to a smoother experience. Altogether Webistor should be and feel a lot faster!
+                        </td>
+                      </tr>
+                    </table>
+                    <table align="left" border="0" cellpadding="0" cellspacing="0" class="templateColumnContainer" style="clear:both;margin-top:25px;">
+                      <tr>
+                        <td valign="top" class="leftColumnContent">
+                          <h3>Better security</h3>
+                          The new server employs an array of technologies that should make your account less prone to being stolen and the website less prone to 
+                          being a victim of a cyber-attack.  
+                        </td>
+                      </tr>
+                    </table>
+                    <table align="right" border="0" cellpadding="0" cellspacing="0" class="templateColumnContainerIMG" style="height:200px;">
+                      <tr>
+                        <td class="rightColumnContent">
+                          <img src="http://api.webistor.net/public/shield.png" style="max-width:225px;" class="columnImage" label="left_column_image" 
+                          edit="left_column_image" />
+                        </td>
+                      </tr>
+                    </table>
+                    <table align="left" border="0" cellpadding="0" cellspacing="0" class="fullColumn" style="clear:both;">
+                      <tr>
+                        <td>
+                          <h3>Account migration</h3>
+                          Your account has been migrated to a new server, along with all your data you currently had. Any entries you may have had that shared 
+                          the same URI have been merged together, this will affect very few users and should not cause problems.<br>
+                          <br>
+                          Because the new server uses an improved password hashing algorithm, we couldn't migrate passwords. Therefor we require everyone to do 
+                          a one-time password reset.
+                          <p style="padding:0;margin:0;text-align:center;"><a href="http://www.webistor.net/password-reset/{{email}}" target="_blank"><img src="http://api.webistor.net/public/knop.png" style="max-width:218px;padding:40px 0;" alt="Reset your password"></a></p>
+                        </td>
+                      </tr>
+                    </table>
+                    <table align="left" border="0" cellpadding="0" cellspacing="0" class="fullColumn" style="clear:both;">
+                      <tr>
+                        <td>
+                          <p style="color:#b5b5b5">
+                            PS. If you have any questions, just reply to this email.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- // END COLUMNS -->
+            </td>
+          </tr>
+        </table>
+        <table style="max-width:626px;width:100%">
+          <tr>
+            <td>
+              <table width="100%">
+                <tr>
+                  <td width="50%">
+                    <img src="http://api.webistor.net/public/label.png" style="margin-top:-2px;margin-left:70px">
+                  </td>
+                  <td align="right" width="50%">
+                    <a href="https://www.twitter.com/Webistor" target="_blank"><img src="http://api.webistor.net/public/twitter.png" style="margin-right:70px;border:none;" /></a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+        <!-- // END TEMPLATE -->
+
+      </td>
+    </tr>
+  </table>
+</center>
 
   </body>
 </html>
