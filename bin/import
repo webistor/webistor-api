@@ -219,7 +219,7 @@ migrate = (database) ->
       Promise.reduce rows, ((memo, row) ->
 
         # Split CVSs into an array.
-        row.tags = row.tags?.split ',' or []
+        row.tags = (row.tags?.split ',') or []
 
         # Start the promise chain by detecting if the entry is already present in the database.
         # If it is, then we either ignore or merge, based on what's desired.
