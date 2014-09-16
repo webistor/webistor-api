@@ -38,7 +38,7 @@ client.use (req, res, next) ->
   res.header 'Content-Security-Policy', [
     "default-src 'none'"
     "style-src 'self' http://fonts.googleapis.com/ http://netdna.bootstrapcdn.com/"
-    "font-src 'self' http://themes.googleusercontent.com/ http://netdna.bootstrapcdn.com/"
+    "font-src 'self' http://themes.googleusercontent.com/ http://netdna.bootstrapcdn.com/ http://fonts.gstatic.com/"
     "script-src 'self' 'unsafe-eval'"
     "img-src 'self'"
     "connect-src http://api.#{config.domainName}:#{config.httpPort}/" + (
