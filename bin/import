@@ -6,24 +6,12 @@ util = require 'util'
 {spawn} = require 'child_process'
 program = require 'commander'
 log = require 'node-logging'
-schemas = require '../lib/schemas'
+schemas = require '../src/schemas'
 {mongoose, User, Entry, Tag} = schemas
 mysql = require 'mysql'
-config = require '../lib/config'
+config = require '../src/config'
 token = require 'rand-token'
-
-# Delayed rejection handling.
-rejections = []
-Promise.onPossiblyUnhandledRejection (ex, promise) -> rejections.push {ex, promise}
-Promise.onUnhandledRejectionHandled (promise) ->
-  break for rejection, index in rejections when rejection.promise is promise
-  rejections.splice index, 1
-
-handleRejections = -> new Promise (resolve, reject) ->
-  resolve() unless rejections.length > 0
-  log.err rejection.ex for rejection in rejections
-  reject new Error "#{rejections.length} Unhandled rejections have been logged."
-  rejections = []
+handleRejections = require '../src/rejection-handler'
 
 # Promisification.
 Promise.promisifyAll User

@@ -1,0 +1,161 @@
+#!/usr/bin/env coffee
+fs = require 'fs'
+path = require 'path'
+{spawn} = require 'child_process'
+Promise = require 'bluebird'
+program = require 'commander'
+mkdirp = require 'mkdirp'
+open = require 'open'
+log = require 'node-logging'
+schemas = require '../src/schemas'
+{mongoose, User} = schemas
+config = require '../src/config'
+handleRejections = require '../src/rejection-handler'
+
+# Promisification.
+Promise.promisifyAll User
+Promise.promisifyAll User.prototype
+Promise.promisifyAll fs
+mkdirpAsync = Promise.promisify mkdirp
+
+
+##
+## COMMAND LINE INTERFACE
+##
+
+# Program definition.
+program
+.version (JSON.parse fs.readFileSync (__dirname + '/../package.json'), 'utf8').version
+.usage '<command> [args...]'
+.option '-v, --verbose', 'increase logging level', ((v, memo) -> ++memo), 0
+
+# Program commands.
+program.command 'send <config>'
+.description "Send a mailing using the given configuration file."
+.action (config) -> send(config).then(handleRejections).done((->process.exit 0), (->process.exit 1))
+program.command 'scaffold <config>'
+.description "Generate a default configuration file."
+.action (config) -> scaffold(config).then(handleRejections).done((->process.exit 0), (->process.exit 1))
+
+
+##
+## BUSINESS
+##
+
+# Set log-level.
+logLevel = (verbose) -> log.setLevel switch verbose
+  when 0              then 'error'
+  when 1              then 'info'
+  when 2, verbose > 2 then 'debug'
+  else                     'error'
+
+# Send command.
+send = (file) ->
+
+  # Set logging level.
+  logLevel program.verbose
+  mailingConfig = null
+  users = null
+  batch = null
+
+  # Normalize the path.
+  file = path.normalize file
+  file = "#{path.dirname file}/#{path.basename file, path.extname file}.coffee"
+  file = path.resolve file
+
+  # Connect to the mongoose database.
+  mongoose.connect config.database
+
+  # Check if the file exists.
+  new Promise (resolve, reject) -> fs.exists file, resolve
+
+  # If it doesn't; throw an error.
+  .then (exists) -> throw new Error "No configuration file found at #{file}." unless exists
+
+  # Require configuration file.
+  .then -> mailingConfig = require file
+
+  # Select and reference users.
+  .then -> User.findAsync mailingConfig.selector, null, lean:true
+  .then (results) -> users = results
+
+  # Create and send the mailing.
+  .then ->
+    batch = typeof mailingConfig.data is "function"
+    Mail = require "../src/classes/" + (if batch then 'batch-mail' else 'mail')
+    mailing = new Mail
+    header = if batch then 'to' else mailingConfig.recipientHeader or 'to'
+    mailing[header] users.map (user) -> user.email
+    mailing.from "Webistor Team <hello@webistor.net>"
+    mailing.subject "Webistor was updated!"
+    mailing.template mailingConfig.template, mailingConfig.data
+    return mailing.send()
+
+  # Log the results.
+  .then (results) ->
+    return log.inf "All done!" if not batch or results.done.length is users.length
+    log.err "#{results.failed.length} out of #{users.length} failed!"
+    log.dbg "#{failed.email}: " + failed.error.toString() for failed in results.failed
+
+  # Log the bad news.
+  .catch (err) ->
+    log.err "Failed to send: #{err}"
+    log.dbg err.stack
+
+# Scaffold command.
+scaffold = (file) ->
+
+  # Set logging level.
+  logLevel program.verbose
+
+  # Normalize the path.
+  file = path.normalize file
+  file = "#{path.dirname file}/#{path.basename file, path.extname file}.coffee"
+  file = path.resolve file
+
+  # Check if the file already exists.
+  new Promise (resolve, reject) -> fs.exists file, resolve
+
+  # If it exists; throw an error.
+  .then (exists) -> throw new Error "A file at #{file} already exists." if exists
+
+  # Create the parent directory.
+  .then -> mkdirpAsync path.dirname file
+
+  # Create the file.
+  .then -> fs.writeFileAsync file, """
+    module.exports =
+
+      # The query selector to be used when selecting users from the database.
+      selector: {}
+
+      # The header to pass recipients in. Possible values are "to", "cc" or "bcc".
+      # CC and BCC are removed before the mail is sent.
+      recipientHeader: "bcc"
+
+      # The template directory located within the mail templates folder.
+      template: "my/template"
+
+      # Data generator function. Should return data relevant to the passed-in recipient.
+      # Can be an object, in which case all recipients will receive the same data.
+      data: (recipient) -> {recipient}
+  """
+
+  # Open the file.
+  .then ->
+    log.inf "Configuration file created."
+    open file
+    # try spawn 'xdg-open', [file], detached:true catch err
+    #   log.err "Failed to open config file: #{err}"
+
+  # Log the bad news.
+  .catch (err) ->
+    log.err "Failed to scaffold: #{err}"
+    log.dbg err.stack
+
+##
+## MAIN
+##
+
+# Go!
+program.parse process.argv
