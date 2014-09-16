@@ -128,6 +128,11 @@ migrate = (database) ->
       # Iterate results.
       Promise.map rows, (row) ->
 
+        # Give the user a name if he never had one.
+        unless row.username
+          row.username = row.email.split('@')[0].toLowerCase().replace(/[^\w-_]/g, '_')
+          log.inf "Granted the name of '#{row.username}' to '#{row.email}'"
+
         # Start the promise chain by detecting if the user is already present in the database.
         Promise.try ->
           return if drop
