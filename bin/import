@@ -26,8 +26,6 @@ Promise.promisifyAll Tag.prototype
 ## COMMAND LINE INTERFACE
 ##
 
-count = (v, memo) -> ++memo
-
 program
 .version (JSON.parse fs.readFileSync (__dirname + '/../package.json'), 'utf8').version
 .usage '[options] "mysql://<user>:<pass>@<host>/<db>"'
@@ -35,7 +33,7 @@ program
 .option '-b, --backup', 'create a dump before importing'
 .option '-m, --merge', 'merge data of entries with equal URIs'
 .option '-p, --prefix <prefix>', 'Override database table prefix. Defaults to "mk".'
-.option '-v, --verbose', 'increase logging level', count, 0
+.option '-v, --verbose', 'increase logging level', ((v, memo) -> ++memo), 0
 
 program.command '*'
 .description "Import data from given Webistor 4.0 MySQL Database."
@@ -159,7 +157,14 @@ migrate = (database) ->
   .then ->
     log.inf "Importing tags..."
     maps.tags = {}
-    db.queryAsync "SELECT * FROM #{w 'tags'}"
+    db.queryAsync "
+      SELECT *, (
+          SELECT COUNT(tag_id) FROM #{w 'entries_to_tags'} AS e2t
+          WHERE e2t.tag_id = tags.id
+        ) AS num_entries
+      FROM #{w 'tags'} AS tags"
+
+    # Process results.
     .spread (rows) ->
       log.dbg "#{rows.length} Tags are being imported."
 
@@ -169,6 +174,7 @@ migrate = (database) ->
         # Start the promise chain by detecting if the tag is already present in the database.
         Promise.try ->
           throw new Error "Could not find author #{row.user_id}." unless maps.users[row.user_id]?
+          throw new Error "Tag had no associated entries." if row.num_entries is 0
           return if drop
           Tag.findOneAsync author: maps.users[row.user_id], title: row.title
           .then (result) ->
@@ -208,12 +214,13 @@ migrate = (database) ->
       Promise.reduce rows, ((memo, row) ->
 
         # Split CVSs into an array.
-        row.tags = row.tags.split ','
+        row.tags = row.tags?.split ',' or []
 
         # Start the promise chain by detecting if the entry is already present in the database.
         # If it is, then we either ignore or merge, based on what's desired.
         Promise.try ->
           throw new Error "Could not find author #{row.user_id}." unless maps.users[row.user_id]?
+          return unless row.url?.length > 0
           Entry.findOneAsync author: maps.users[row.user_id], url: row.url
           .then (result) ->
             return unless result
