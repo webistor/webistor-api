@@ -37,7 +37,7 @@ client = express()
 client.use (req, res, next) ->
   res.header 'Content-Security-Policy', [
     "default-src 'none'"
-    "style-src 'self' http://fonts.googleapis.com/ http://netdna.bootstrapcdn.com/"
+    "style-src 'self' http://fonts.googleapis.com/ http://netdna.bootstrapcdn.com/ 'unsafe-inline'"
     "font-src 'self' http://themes.googleusercontent.com/ http://netdna.bootstrapcdn.com/ http://fonts.gstatic.com/"
     "script-src 'self' 'unsafe-eval'"
     "img-src 'self'"
