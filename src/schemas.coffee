@@ -83,7 +83,7 @@ schemas.Entry.index {title:'text', description:'text'}, {default_language: 'en'}
 schemas.Tag.index {title:'text'}, {default_language: 'en'}
 
 # This method can be relied upon to return the actual number of entries.
-schemas.Tag.method 'countEntries', (cb) -> @model('tag').count {tags:@id}, cb
+schemas.Tag.method 'countEntries', (cb) -> @model('entry').count {tags:@id}, cb
 
 ##
 ## MODELS
