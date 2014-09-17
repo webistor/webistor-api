@@ -41,7 +41,7 @@ client.use (req, res, next) ->
     "font-src 'self' http://themes.googleusercontent.com/ http://netdna.bootstrapcdn.com/ http://fonts.gstatic.com/"
     "script-src 'self' 'unsafe-eval'"
     "img-src 'self'"
-    "connect-src http://api.#{config.domainName}:#{config.httpPort}/" + (
+    "connect-src http://api.#{config.domainName}:#{config.daemon.httpPort}/" + (
       if config.debug then " ws://localhost:9485/ http://localhost:#{config.serverPort}" else ''
     )
   ].join(';\n')
