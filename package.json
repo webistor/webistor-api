@@ -29,7 +29,7 @@
     "mongoose": "~3",
     "mysql": "^2.4.0",
     "node-logging": "*",
-    "node-restful": "git+ssh://git@github.com:Tuxion/node-restful.git",
+    "node-restful": "git+https://github.com/Tuxion/node-restful.git",
     "nodemailer": "~0.6",
     "open": "0.0.5",
     "rand-token": "~0.2",
