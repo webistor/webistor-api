@@ -78,9 +78,6 @@ server.use (req, res, next) ->
       return res.end()
   next()
 
-# Serve a public folder for assets like images used in emails.
-server.use '/public', serveStatic './public'
-
 # Parse request body as JSON.
 server.use json strict:true
 
