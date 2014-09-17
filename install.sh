@@ -37,7 +37,6 @@ sudo -u $UNAME -- bash -c "
   npm install
   nano src/config.coffee
   cake build
-  cp -r src/templates lib/templates
 " || exit $?
 
 # Move to init.d

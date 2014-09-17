@@ -162,6 +162,7 @@ migrate = (database) ->
   .then ->
     log.inf "Importing tags..."
     maps.tags = {}
+    maps.tag_authors = {}
     db.queryAsync "
       SELECT *, (
           SELECT COUNT(tag_id) FROM #{w 'entries_to_tags'} AS e2t
@@ -175,6 +176,9 @@ migrate = (database) ->
 
       # Iterate results.
       Promise.map rows, (row) ->
+
+        # Create a mapping of tag authors in order to fix a data corruption problem.
+        maps.tag_authors[row.id] = row.user_id
 
         # Start the promise chain by detecting if the tag is already present in the database.
         Promise.try ->
@@ -222,7 +226,9 @@ migrate = (database) ->
         row.tags = (row.tags?.split ',') or []
 
         # Map to Mongo IDs.
-        row.tags = row.tags.map (id) -> maps.tags[id]
+        row.tags = row.tags
+        .filter (id) -> maps.tag_authors[id] is row.user_id
+        .map (id) -> maps.tags[id]
 
         # Start the promise chain by detecting if the entry is already present in the database.
         # If it is, then we either ignore or merge, based on what's desired.
