@@ -54,6 +54,9 @@ module.exports = class TagController extends Controller
   ###
   addNum: (req, res, as = 'num') ->
 
+    # Do not add num in case of an error.
+    return if res.locals.bundle instanceof Error
+
     # The function that adds the number to a single tag.
     addNum = (tag) ->
       Promise.promisify(tag.countEntries, tag)()

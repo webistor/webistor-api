@@ -114,14 +114,14 @@ ensureLogin = server.sessionController.getMiddleware 'ensureLogin'
 ensureOwnership = server.sessionController.getMiddleware 'ensureOwnership'
 
 # Route: Set up entry REST routes.
+server.get '/entries', ensureLogin
+server.get '/entries', server.entryController.getMiddleware 'search'
 server.db.Entry.methods ['get', 'post', 'put', 'delete']
 server.db.Entry.before 'get', ensureOwnership
 server.db.Entry.before 'post', ensureOwnership
 server.db.Entry.before 'put', ensureOwnership
 server.db.Entry.before 'delete', ensureOwnership
 server.db.Entry.register server, '/entries'
-server.get '/entries', ensureLogin
-server.get '/entries', server.entryController.getMiddleware 'search'
 
 # Route: Set up tag REST routes.
 server.db.Tag.methods ['get', 'post', 'put', 'delete']

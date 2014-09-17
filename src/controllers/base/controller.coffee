@@ -86,7 +86,10 @@ module.exports = class Controller
   sendError: (req, res, err) ->
     statusCode = err.statusCode or 500
     res.status statusCode
-    .send error:(if err instanceof Error then err.message else err)
+    .send if err instanceof Error then err else {
+      message: err.toString()
+      name: "Error"
+    }
 
   ###*
    * Respond to a request with the given data.

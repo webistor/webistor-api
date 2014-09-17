@@ -108,11 +108,10 @@ module.exports = class EntryController extends Controller
 
     # Execute the database query.
     .then ->
-      Entry.findAsync {$and: conditions}
+      Entry.find {$and: conditions}
+      .sort '-created'
+      .exec()
 
-    # Process results.
-    .then (entries) ->
-      return entries
 
   ###*
    * Parses a search-query.
@@ -150,4 +149,3 @@ module.exports = class EntryController extends Controller
 
     # Return the results.
     {query, tags, users, groups, search, indexes, empty}
-
