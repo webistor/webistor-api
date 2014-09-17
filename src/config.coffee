@@ -7,7 +7,7 @@ module.exports =
   publicHtml: '../ui/public'
   database: 'mongodb://localhost/webistor'
   logLevel: 'debug'
-  whitelist: ['localhost', 'webistor.net']
+  whitelist: ['localhost', 'webistor.net', 'www.webistor.net']
   sessionKeys: ['sesamopenu']
 
   # The release stage is used mainly for access control.
