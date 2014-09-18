@@ -20,6 +20,7 @@ module.exports = class EntryController extends Controller
   search: (req) ->
 
     # Gather input.
+    options = req.query.options or {}
     search = @_parseSearchQuery req.query.query or ''
     language = req.query.ln
     conditions = []
@@ -108,9 +109,10 @@ module.exports = class EntryController extends Controller
 
     # Execute the database query.
     .then ->
-      Entry.find {$and: conditions}
-      .sort '-created'
-      .exec()
+      q = Entry.find {$and: conditions}
+      q.sort '-created'
+      q.limit options.limit if options.limit?
+      q.exec()
 
 
   ###*
