@@ -1,7 +1,7 @@
 module.exports =
 
   # The query selector to be used when selecting users from the database.
-  selector: {}
+  selector: {password:null}
 
   # The header to pass recipients in. Possible values are "to", "cc" or "bcc".
   # CC and BCC are removed before the mail is sent.
