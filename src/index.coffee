@@ -37,12 +37,12 @@ client = express()
 client.use (req, res, next) ->
   res.header 'Content-Security-Policy', [
     "default-src 'none'"
-    "style-src 'self' http://fonts.googleapis.com/ http://netdna.bootstrapcdn.com/ 'unsafe-inline'"
-    "font-src 'self' http://themes.googleusercontent.com/ http://netdna.bootstrapcdn.com/ http://fonts.gstatic.com/"
+    "style-src 'self' fonts.googleapis.com netdna.bootstrapcdn.com 'unsafe-inline'"
+    "font-src 'self' themes.googleusercontent.com netdna.bootstrapcdn.com fonts.gstatic.com"
     "script-src 'self' 'unsafe-eval'"
     "img-src 'self'"
-    "connect-src http://api.#{config.domainName}:#{config.daemon.httpPort}/" + (
-      if config.debug then " ws://localhost:9485/ http://localhost:#{config.serverPort}" else ''
+    "connect-src api.#{config.domainName}:#{config.daemon.httpPort}" + (
+      if config.debug then " ws://localhost:9485/ localhost:#{config.serverPort}" else ''
     )
   ].join(';\n')
   next()
