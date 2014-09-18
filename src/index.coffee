@@ -159,9 +159,12 @@ if config.daemon?.enabled
     root = config.domainName
     host = req.headers.host.split(':')[0]
     switch host
-      when root, "www.#{root}" then client arguments...
+      when root
+        res.writeHead 301, Location: "http://www.#{root}#{req.url}"
+        res.end()
+      when "www.#{root}" then client arguments...
       when "api.#{root}" then server arguments...
-      else do ->
+      else
         body = "Host #{host} not recognized. This might be due to bad server configuration."
         res.writeHead 400, "Invalid host.", {
           'Content-Length': body.length
