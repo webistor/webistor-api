@@ -238,7 +238,6 @@ migrate = (database) ->
           Entry.findOneAsync author: maps.users[row.user_id], url: row.url
           .then (result) ->
             return unless result
-            maps.tags[row.id] = result.id
             throw new Error "Entry is already owned by its author." unless merge
             result.description = "
               #{result.description}\n\n#
