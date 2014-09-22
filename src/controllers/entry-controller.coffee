@@ -114,6 +114,21 @@ module.exports = class EntryController extends Controller
       q.limit options.limit if options.limit?
       q.exec()
 
+  ###*
+   * Throw an error if req.body.url is already used by an entry.
+   *
+   * @method ensureUniqueURI
+   *
+   * @param {http.IncomingMessage} req The Express request object.
+   *
+   * @return {Promise} A promise of the found entries.
+  ###
+  ensureUniqueURI: (req) ->
+    return unless req.body.url?.length > 0
+    Entry.findOneAsync {url:req.body.url, author:req.session.userId}
+    .then (result) ->
+      return if not result or result.id is req.body.id
+      throw new ServerError 400, "The URI specified is already in use by one of your other entries."
 
   ###*
    * Parses a search-query.
