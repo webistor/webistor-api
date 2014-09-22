@@ -4,7 +4,7 @@ module.exports =
   serverPort: 3001
   debug: true
   timezone: 'Europe/Amsterdam'
-  publicHtml: '../ui/public'
+  publicHtml: '/home/avaq/Dev/tuxion/webistor/ui/public'
   database: 'mongodb://localhost/webistor'
   logLevel: 'debug'
   whitelist: ['localhost', 'webistor.net', 'www.webistor.net']

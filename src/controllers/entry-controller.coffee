@@ -3,10 +3,15 @@ Promise = require 'bluebird'
 config = require '../config'
 ServerError = require './base/server-error'
 log = require 'node-logging'
-User = Promise.promisifyAll (require '../schemas').User
-Tag = Promise.promisifyAll (require '../schemas').Tag
-Entry = Promise.promisifyAll (require '../schemas').Entry
+{User, Tag, Entry} = require '../schemas'
 _ = require 'lodash'
+
+Promise.promisifyAll User
+Promise.promisifyAll User.prototype
+Promise.promisifyAll Tag
+Promise.promisifyAll Tag.prototype
+Promise.promisifyAll Entry
+Promise.promisifyAll Entry.prototype
 
 module.exports = class EntryController extends Controller
 
@@ -114,7 +119,6 @@ module.exports = class EntryController extends Controller
       q.limit options.limit if options.limit?
       q.exec()
 
-
   ###*
    * Parses a search-query.
    *
@@ -151,3 +155,21 @@ module.exports = class EntryController extends Controller
 
     # Return the results.
     {query, tags, users, groups, search, indexes, empty}
+
+  insert: (req, res) ->
+    entry = new Entry req.body
+    entry.saveAsync()
+    .then -> 
+
+  update:
+
+  delete:
+
+
+
+  findChangedTags: (req, res, method) ->
+    if method is 'delete'
+
+
+  updateChangedTags: (req, res) ->
+    return unless res.changedTags?
