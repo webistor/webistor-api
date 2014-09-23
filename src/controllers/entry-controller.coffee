@@ -38,6 +38,9 @@ module.exports = class EntryController extends Controller
       {userShare: req.session.userId}
     ]}
 
+    # Filter by URI?
+    conditions.push {url:options.uri} if options.uri?
+
     # Find author ID's.
     authorPromise = Promise.try ->
 
