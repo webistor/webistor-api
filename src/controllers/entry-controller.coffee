@@ -130,7 +130,7 @@ module.exports = class EntryController extends Controller
     return unless req.body.url?.length > 0
     Entry.findOneAsync {url:req.body.url, author:req.session.userId}
     .then (result) ->
-      return if not result or result.id is req.body.id
+      return if not result or result.id is req.body._id
       throw new ServerError 400, "The URI specified is already in use by one of your other entries."
 
   ###*
