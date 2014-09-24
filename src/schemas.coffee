@@ -64,7 +64,6 @@ schemas =
       /^.{1,48}$/, "A tag must contain between one and 48 characters."
     ]
     color:  type: String, uppercase: true, match: /^[0-9A-F]{6}$/
-    # Warning! The following property can stale and should therefore not be relied upon.
     num:    type: Number, default: 0
 
 
@@ -82,8 +81,6 @@ schemas.User.method 'countInvitations', (cb) -> @model('invitation').count {auth
 schemas.Entry.index {title:'text', description:'text'}, {default_language: 'en'}
 schemas.Tag.index {title:'text'}, {default_language: 'en'}
 
-# This method can be relied upon to return the actual number of entries.
-schemas.Tag.method 'countEntries', (cb) -> @model('entry').count {tags:@id}, cb
 
 ##
 ## MODELS

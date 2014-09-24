@@ -109,17 +109,21 @@ server.post '/users/:id/password-reset', server.sessionController.getMiddleware 
 # Shared middleware.
 ensureLogin = server.sessionController.getMiddleware 'ensureLogin'
 ensureOwnership = server.sessionController.getMiddleware 'ensureOwnership'
+updateChangedTags = server.entryController.getMiddleware 'updateChangedTags'
 
 # Route: Set up entry REST routes.
 server.get '/entries', ensureLogin
 server.get '/entries', server.entryController.getMiddleware 'search'
-server.db.Entry.methods ['get', 'post', 'put', 'delete']
+server.db.Entry.methods ['get']
 server.db.Entry.before 'get', ensureOwnership
 server.db.Entry.before 'post', ensureOwnership
 server.db.Entry.before 'post', server.entryController.getMiddleware 'ensureUniqueURI'
+server.db.Entry.before 'post', server.entryController.getMiddleware 'cacheDirtyTags', 'post'
 server.db.Entry.before 'put', ensureOwnership
 server.db.Entry.before 'put', server.entryController.getMiddleware 'ensureUniqueURI'
+server.db.Entry.before 'put', server.entryController.getMiddleware 'cacheDirtyTags', 'put'
 server.db.Entry.before 'delete', ensureOwnership
+server.db.Entry.before 'delete', server.entryController.getMiddleware 'cacheDirtyTags', 'delete'
 server.db.Entry.register server, '/entries'
 
 # Route: Set up tag REST routes.
@@ -128,9 +132,6 @@ server.db.Tag.before 'get', ensureOwnership
 server.db.Tag.before 'post', ensureOwnership
 server.db.Tag.before 'put', ensureOwnership
 server.db.Tag.before 'delete', ensureOwnership
-server.db.Tag.after 'get', server.tagController.getMiddleware 'addNum'
-server.db.Tag.after 'post', server.tagController.getMiddleware 'addNum'
-server.db.Tag.after 'put', server.tagController.getMiddleware 'addNum'
 server.db.Tag.register server, '/tags'
 server.patch '/tags', ensureLogin
 server.patch '/tags', server.tagController.getMiddleware 'patch'
