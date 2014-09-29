@@ -141,26 +141,33 @@ module.exports = class EntryController extends Controller
       return if not result or result.id is req.body._id
       throw new ServerError 400, "The URI specified is already in use by one of your other entries."
 
-  ##
+  ###*
+   * Analyze a request body to detect what which tags will change as a result of the request.
+   *
+   * @method detectDirtyTags
+  ###
   detectDirtyTags: (req, res) ->
+    _toString = (tag) -> tag.toString()
     return switch req.method.toLowerCase()
       when 'post'
         req.dirtyTags = req.body.tags
         null
       when 'delete'
         Promise.promisify(req.quer.findOne, req.quer)()
-        .then (entry) -> req.dirtyTags = entry.get 'tags'
+        .then (entry) -> req.dirtyTags = entry.get('tags').map _toString
         .return null
       when 'put'
         Promise.promisify(req.quer.findOne, req.quer)()
         .then (entry) ->
-          old = entry.get('tags').map (tag) -> tag.toString()
-          put = req.body.tags.map (tag) -> tag.toString()
-          req.dirtyTags = _.xor old, put
+          req.dirtyTags = _.xor req.body.tags, entry.get('tags').map _toString
         .return null
       else null
 
-  ##
+  ###*
+   * Store previously found dirty tags.
+   *
+   * @method cacheDirtyTags
+  ###
   cacheDirtyTags: (req, res) ->
     return if res.locals.bundle instanceof Error
     return null unless req.dirtyTags?.length > 0
@@ -169,7 +176,12 @@ module.exports = class EntryController extends Controller
     cache.push tag for tag in req.dirtyTags when tag not in cache
     return null
 
-  ##
+  ###*
+   * Ensure the tags of the currently logged in user are no longer dirty by recalculating
+   * the "num" property.
+   *
+   * @method updateDirtyTags
+  ###
   updateDirtyTags: (req, res) ->
 
     # Reference the cache of the logged in user.
