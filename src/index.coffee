@@ -37,16 +37,38 @@ client = express()
 
 # Content Security Policy.
 client.use (req, res, next) ->
+
+  # Arrays of whitelisted domains for styles and fonts.
+  styleDomains = ['fonts.googleapis.com', 'netdna.bootstrapcdn.com']
+  fontDomains = ['themes.googleusercontent.com', 'netdna.bootstrapcdn.com', 'fonts.gstatic.com']
+
+  # Chrome implemented CSP properly.
+  if /Chrome/.test req.headers['user-agent']
+    styles = styleDomains.join(' ')
+    fonts = fontDomains.join(' ')
+
+  # Others didn't.
+  else
+    styles =
+      styleDomains.map((domain) -> "http://#{domain}").join(' ') + ' ' +
+      styleDomains.map((domain) -> "https://#{domain}").join(' ')
+    fonts =
+      fontDomains.map((domain) -> "http://#{domain}").join(' ') + ' ' +
+      fontDomains.map((domain) -> "https://#{domain}").join(' ')
+
+  # Send the CSP header.
   res.header 'Content-Security-Policy', [
     "default-src 'none'"
-    "style-src 'self' fonts.googleapis.com netdna.bootstrapcdn.com 'unsafe-inline'"
-    "font-src 'self' themes.googleusercontent.com netdna.bootstrapcdn.com fonts.gstatic.com"
+    "style-src 'self' 'unsafe-inline' " + styles
+    "font-src 'self' " + fonts
     "script-src 'self' 'unsafe-eval'"
     "img-src 'self'"
     "connect-src api.#{config.domainName}:#{config.daemon.httpPort}" + (
       if config.debug then " ws://localhost:9485/ localhost:#{config.serverPort}" else ''
     )
   ].join(';\n')
+
+  # Next middleware.
   next()
 
 # Set up shared middleware.
