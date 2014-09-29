@@ -10,7 +10,8 @@ TagController = require './controllers/tag-controller'
 InvitationController = require './controllers/invitation-controller'
 favicon = require 'static-favicon'
 {json} = require 'body-parser'
-session = require 'cookie-session'
+session = require 'express-session'
+MongoStore = require 'express-session-mongo'
 serveStatic = require 'serve-static'
 countTagsTimesUsed = require './tasks/count-tags-times-used'
 
@@ -84,7 +85,7 @@ server.use (req, res, next) ->
 server.use json strict:true
 
 # Set up session support.
-server.use session key: 'session', keys: config.sessionKeys, signed: true
+server.use session name: 'session', store: new MongoStore db: ''
 
 # Import database schemas.
 server.db = require './schemas'
