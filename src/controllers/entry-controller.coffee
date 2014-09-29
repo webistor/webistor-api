@@ -3,12 +3,20 @@ Promise = require 'bluebird'
 config = require '../config'
 ServerError = require './base/server-error'
 log = require 'node-logging'
-User = Promise.promisifyAll (require '../schemas').User
-Tag = Promise.promisifyAll (require '../schemas').Tag
-Entry = Promise.promisifyAll (require '../schemas').Entry
+{User, Tag, Entry} = require '../schemas'
 _ = require 'lodash'
 
+Promise.promisifyAll User
+Promise.promisifyAll User.prototype
+Promise.promisifyAll Tag
+Promise.promisifyAll Tag.prototype
+Promise.promisifyAll Entry
+Promise.promisifyAll Entry.prototype
+
 module.exports = class EntryController extends Controller
+
+  constructor: ->
+    @dirtyTags = {}
 
   ###*
    * Uses the given query parameters to perform an extensive search of entries.
@@ -132,6 +140,69 @@ module.exports = class EntryController extends Controller
     .then (result) ->
       return if not result or result.id is req.body._id
       throw new ServerError 400, "The URI specified is already in use by one of your other entries."
+
+  ##
+  detectDirtyTags: (req, res) ->
+    return switch req.method.toLowerCase()
+      when 'post'
+        req.dirtyTags = req.body.tags
+        null
+      when 'delete'
+        Promise.promisify(req.quer.findOne, req.quer)()
+        .then (entry) -> req.dirtyTags = entry.get 'tags'
+        .return null
+      when 'put'
+        Promise.promisify(req.quer.findOne, req.quer)()
+        .then (entry) ->
+          old = entry.get('tags').map (tag) -> tag.toString()
+          put = req.body.tags.map (tag) -> tag.toString()
+          req.dirtyTags = _.xor old, put
+        .return null
+      else null
+
+  ##
+  cacheDirtyTags: (req, res) ->
+    return if res.locals.bundle instanceof Error
+    return null unless req.dirtyTags?.length > 0
+    log.dbg "Flagging #{req.dirtyTags.length} tags as dirty for user #{req.session.userId}."
+    cache = @dirtyTags[req.session.userId] or= []
+    cache.push tag for tag in req.dirtyTags when tag not in cache
+    return null
+
+  ##
+  updateDirtyTags: (req, res) ->
+
+    # Reference the cache of the logged in user.
+    cache = @dirtyTags[req.session.userId]
+
+    # Skip all of this if the author doesn't have any dirty tags right now.
+    return unless cache?.length > 0
+
+    # Log.
+    log.dbg "Cleaning up #{cache.length} dirty tags for user #{req.session.userId}."
+
+    # Iterate all the dirty tags of this author, mapping them to the promises of their resolution.
+    Promise.map cache, (id) =>
+      tag = null
+      Tag.findByIdAsync id
+      .then (result) ->
+        tag = result
+        tag.countTimesUsedAsync()
+      .then (timesUsed) =>
+        return tag.removeAsync() if timesUsed is 0
+        tag.set 'num', timesUsed
+        tag.saveAsync()
+      .then ->
+        cache.splice cache.indexOf(id), 1
+
+    # Wait for all promises to resolve.
+    .all()
+
+    # No longer flag these tags as dirty.
+    .then => delete @dirtyTags[req.session.userId] if cache?.length is 0
+
+    # No return value.
+    .return null
 
   ###*
    * Parses a search-query.

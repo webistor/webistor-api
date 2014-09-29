@@ -77,6 +77,9 @@ schemas.User.pre 'save', Auth.Middleware.hashPassword()
 # Get the number of invitations sent by this user.
 schemas.User.method 'countInvitations', (cb) -> @model('invitation').count {author:this}, cb
 
+# Count the amount of times this tag is used.
+schemas.Tag.method 'countTimesUsed', (cb) -> @model('entry').count {tags:@id}, cb
+
 # Add text indexes for text-search support.
 schemas.Entry.index {title:'text', description:'text'}, {default_language: 'en'}
 schemas.Tag.index {title:'text'}, {default_language: 'en'}

@@ -12,6 +12,8 @@ favicon = require 'static-favicon'
 {json} = require 'body-parser'
 session = require 'cookie-session'
 serveStatic = require 'serve-static'
+countTagsTimesUsed = require './tasks/count-tags-times-used'
+
 
 ##
 ## SHARED
@@ -109,26 +111,29 @@ server.post '/users/:id/password-reset', server.sessionController.getMiddleware 
 # Shared middleware.
 ensureLogin = server.sessionController.getMiddleware 'ensureLogin'
 ensureOwnership = server.sessionController.getMiddleware 'ensureOwnership'
-updateChangedTags = server.entryController.getMiddleware 'updateChangedTags'
 
 # Route: Set up entry REST routes.
 server.get '/entries', ensureLogin
 server.get '/entries', server.entryController.getMiddleware 'search'
-server.db.Entry.methods ['get']
+server.db.Entry.methods ['get', 'post', 'put', 'delete']
 server.db.Entry.before 'get', ensureOwnership
 server.db.Entry.before 'post', ensureOwnership
 server.db.Entry.before 'post', server.entryController.getMiddleware 'ensureUniqueURI'
-server.db.Entry.before 'post', server.entryController.getMiddleware 'cacheDirtyTags', 'post'
+server.db.Entry.before 'post', server.entryController.getMiddleware 'detectDirtyTags'
+server.db.Entry.after 'post', server.entryController.getMiddleware 'cacheDirtyTags'
 server.db.Entry.before 'put', ensureOwnership
 server.db.Entry.before 'put', server.entryController.getMiddleware 'ensureUniqueURI'
-server.db.Entry.before 'put', server.entryController.getMiddleware 'cacheDirtyTags', 'put'
+server.db.Entry.before 'put', server.entryController.getMiddleware 'detectDirtyTags'
+server.db.Entry.after 'put', server.entryController.getMiddleware 'cacheDirtyTags'
 server.db.Entry.before 'delete', ensureOwnership
-server.db.Entry.before 'delete', server.entryController.getMiddleware 'cacheDirtyTags', 'delete'
+server.db.Entry.before 'delete', server.entryController.getMiddleware 'detectDirtyTags'
+server.db.Entry.after 'delete', server.entryController.getMiddleware 'cacheDirtyTags'
 server.db.Entry.register server, '/entries'
 
 # Route: Set up tag REST routes.
 server.db.Tag.methods ['get', 'post', 'put', 'delete']
 server.db.Tag.before 'get', ensureOwnership
+server.db.Tag.before 'get', server.entryController.getMiddleware 'updateDirtyTags'
 server.db.Tag.before 'post', ensureOwnership
 server.db.Tag.before 'put', ensureOwnership
 server.db.Tag.before 'delete', ensureOwnership
@@ -192,6 +197,15 @@ if config.daemon?.enabled
   # Listen on admin port.
   admin.listen config.daemon.adminPort
 
+
+##
+## MAIN
+##
+
+log.dbg "Counting the usage times on all tags..."
+countTagsTimesUsed()
+.catch (err) -> log.err "Failed counting tags: #{err}"
+.done -> log.dbg "Finished counting tags."
 
 
 ##
