@@ -190,9 +190,7 @@ if config.daemon?.enabled
 
   # Bring the application to an idle state.
   admin.get '/shutdown', (req, res) ->
-    server.db.disconnect client.close server.close proxy.close ->
-      res.status(200).end()
-      admin.close()
+    server.db.disconnect client.close server.close proxy.close -> res.status(200).end()
 
   # Listen on admin port.
   admin.listen config.daemon.adminPort
