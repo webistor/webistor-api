@@ -33,7 +33,8 @@ module.exports = class Controller
     return next() unless ret?
     return @sendData req, res, ret unless Promise.is ret
 
-    # At this point we can treat the return value as a promise, and handle is that way.
+
+    # At this point we can treat the return value as a promise, and handle it that way.
     ret
 
     # Forge and send a response based on the resolution value.
@@ -84,9 +85,13 @@ module.exports = class Controller
    * @chainable
   ###
   sendError: (req, res, err) ->
-    statusCode = err.statusCode or 500
-    res.status statusCode
-    .send if err instanceof Error then err else {
+
+    # Fix for what seems to be a bug in Node.
+    if err instanceof Error and err.message and err.name and not err.toJSON
+      err.toJSON = -> {name: @name, message: @message}
+
+    res.status err.statusCode or 500
+    .send if err instanceof Error and err.message and err.name then err else {
       message: err.toString()
       name: "Error"
     }
