@@ -1,4 +1,4 @@
-# Webistor API - Version 0.4 Dev
+# Webistor API - Version 0.5.0 Beta
 
 ## Installing (Linux Debian)
 
@@ -6,22 +6,16 @@
 
 * Install build tools
   `sudo apt-get install gcc make build-essential g++`
-* Install Node
-  `sudo apt-get install nodejs-legacy`
-  or [From website](http://nodejs.org/)
-* Install MongoDB Version 2.6 or higher
-  [From website](http://www.mongodb.org/)
-* Install Node Package Manager
-  `curl https://www.npmjs.org/install.sh | sudo sh` OR
-  `sudo apt-get install npm`
+* Install Node 0.10.x
+  using [Node Version Manager](https://github.com/creationix/nvm) (recommended)
+  or using [Install Guide](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager)
+* Install MongoDB >= 2.6
+  using [Install Guide](http://docs.mongodb.org/manual/installation/)
 * Install CoffeeScript
   `npm install -g coffee-script`
 
-For Node and NPM
-[this install guide](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager)
-explains several different approaches to installing on different platforms.
-[These gists](https://gist.github.com/isaacs/579814) are helpful when you want/need to
-install node without sudo, which can prevent some access problems later on.
+For Node and NPM [These gists](https://gist.github.com/isaacs/579814) are helpful when you
+want/need to install node without sudo, which can prevent some access problems later on.
 
 ### Installation
 

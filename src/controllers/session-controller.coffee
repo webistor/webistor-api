@@ -51,8 +51,11 @@ module.exports = class SessionController extends Controller
    * @return {Promise} A promise of a user mongo document.
   ###
   getUser: (req) ->
-    throw new ServerError 404, "Not logged in." unless @isLoggedIn req
+    throw new ServerError 404, "Not logged in." unless req.session?.userId?
     User.findByIdAsync req.session.userId
+    .then (user) ->
+      throw new ServerError 404, "User not found." unless user?
+      return user
 
   ###*
    * Return true if a user is logged in, false otherwise.
@@ -62,7 +65,9 @@ module.exports = class SessionController extends Controller
    * @return {Boolean}
   ###
   isLoggedIn: (req) ->
-    req.session.userId?
+    return false unless req.session?.userId?
+    User.countAsync {_id:req.session.userId}
+    .then (amount) -> amount is 1
 
   ###*
    * Throw an exception if the request was not made by a logged in user. Return null otherwise.
@@ -72,7 +77,7 @@ module.exports = class SessionController extends Controller
    * @return {null}
   ###
   ensureLogin: (req) ->
-    return null if @isLoggedIn req
+    return null if req.session?.userId?
     throw new ServerError 401, "You are not logged in."
 
   ###*
@@ -302,7 +307,6 @@ module.exports = class SessionController extends Controller
    * @return {String} Status message.
   ###
   logout: (req) ->
-    throw new ServerError 404, "User wasn't logged in." unless @isLoggedIn req
     delete req.session.userId
     return "Successfully logged out."
 

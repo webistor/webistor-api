@@ -2,13 +2,12 @@ module.exports =
   domainName: 'webistor.net'
   clientPort: 3000
   serverPort: 3001
-  httpPort: null
-  debug: false
+  debug: true
   timezone: 'Europe/Amsterdam'
-  publicHtml: '../ui/public'
+  publicHtml: '/absolute/path/to/public'
   database: 'mongodb://localhost/webistor'
   logLevel: 'debug'
-  whitelist: ['localhost', 'webistor.net']
+  whitelist: ['localhost', 'webistor.net', 'www.webistor.net']
   sessionKeys: ['sesamopenu']
 
   # The release stage is used mainly for access control.
@@ -25,3 +24,11 @@ module.exports =
 
   # An array of usernames which users are not allowed to take.
   reservedUserNames: ['me']
+
+  # Daemon settings.
+  daemon:
+    enabled: false
+    httpPort: 80
+    adminPort: 3002
+    uid: 'node'
+    gid: 'node'

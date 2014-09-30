@@ -23,6 +23,3 @@ node_modules/
 
 # CoffeeScript output directory.
 lib/
-
-# Symbolic link to client application public folder.
-public/

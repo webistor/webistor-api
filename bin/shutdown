@@ -1,0 +1,21 @@
+#!/usr/bin/env coffee
+http = require 'http'
+config = require '../lib/config'
+log = require 'node-logging'
+
+# Request options.
+options =
+  host: "localhost"
+  port: config.daemon.adminPort
+  path: "/shutdown"
+
+# Create request.
+request = http.request options, (response) ->
+  log.inf "Server is ready for shutdown."
+
+# Handle errors.
+request.on "error", (err) -> throw err
+
+# Go.
+log.inf "Instructing server to prepare for shutdown."
+request.end()

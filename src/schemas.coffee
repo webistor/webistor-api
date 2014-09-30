@@ -55,7 +55,7 @@ schemas =
     ]
     url:          type: String
     description:  type: String
-    tags:         type: [ObjectId], ref: 'tag'
+    tags:         type: [ObjectId], ref: 'tag', index:true
 
   # The Tag schema.
   Tag: Schema
@@ -64,7 +64,6 @@ schemas =
       /^.{1,48}$/, "A tag must contain between one and 48 characters."
     ]
     color:  type: String, uppercase: true, match: /^[0-9A-F]{6}$/
-    # Warning! The following property can stale and should therefore not be relied upon.
     num:    type: Number, default: 0
 
 
@@ -78,12 +77,13 @@ schemas.User.pre 'save', Auth.Middleware.hashPassword()
 # Get the number of invitations sent by this user.
 schemas.User.method 'countInvitations', (cb) -> @model('invitation').count {author:this}, cb
 
+# Count the amount of times this tag is used.
+schemas.Tag.method 'countTimesUsed', (cb) -> @model('entry').count {tags:@id}, cb
+
 # Add text indexes for text-search support.
 schemas.Entry.index {title:'text', description:'text'}, {default_language: 'en'}
 schemas.Tag.index {title:'text'}, {default_language: 'en'}
 
-# This method can be relied upon to return the actual number of entries.
-schemas.Tag.method 'countEntries', (cb) -> @model('tag').count {tags:@id}, cb
 
 ##
 ## MODELS
