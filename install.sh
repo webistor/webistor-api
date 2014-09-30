@@ -1,6 +1,6 @@
 # Full installation process for Webistor Server.
-APIBRANCH=release/0.5.0-beta
-UIBRANCH=release/0.1.0-beta
+APIBRANCH=master
+UIBRANCH=master
 
 # Install Node.
 apt-get install curl
