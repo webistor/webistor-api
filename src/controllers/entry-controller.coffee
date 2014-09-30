@@ -33,12 +33,6 @@ module.exports = class EntryController extends Controller
     language = req.query.ln
     conditions = []
 
-    # Text search?
-    if search.search.length > 0
-      ts = {$search:search.search}
-      ts.$language = language if language?
-      conditions.push {$text:ts}
-
     # Ensure the user will have access to every result.
     conditions.push {$or:[
       {author: req.session.userId}
@@ -103,20 +97,34 @@ module.exports = class EntryController extends Controller
     .then (authors) ->
       conditions.push {author:$in:authors} unless authors is false
 
-    # Find tag ID's.
+    # Find tags that have been explicitly given.
     tagPromise = Promise.try ->
-      return false unless search.tags.length > 0
-      tagConditions = {author:req.session.userId, title:$in:search.tags}
-      tagConditions.$text = ts if ts?
-      Tag.findAsync tagConditions, {lean:true}
+      return [] unless search.tags.length > 0
+      Tag.findAsync {author:req.session.userId, title:$in:search.tags}
       .then (tags) -> tags.map (t) -> t._id
 
-    # Add a condition to filter by tags if needed.
+    # Narrow the search to entries containing each of the explicit tags found.
     .then (tags) ->
       conditions.push {tags:$all:tags} if tags.length > 0
 
+    # Text search?
+    if search.search.length > 0
+      $text = {$search:search.search}
+      $text.$language = language if language?
+
+    # Find tags by doing a full-text search.
+    fullTextPromise = Promise.try ->
+      return [] unless $text?
+      Tag.findAsync {author:req.session.userId, $text}
+      .then (tags) -> tags.map (t) -> t._id
+
+    # Add full-text search conditions.
+    .then (tags) ->
+      return unless $text
+      conditions.push if tags.length > 0 then {$or:[{tags:$in:tags}, {$text}]} else {$text}
+
     # Once all condition building has been done..
-    Promise.join authorPromise, tagPromise
+    Promise.join authorPromise, tagPromise, fullTextPromise
 
     # Execute the database query.
     .then ->

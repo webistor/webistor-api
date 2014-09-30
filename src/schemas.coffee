@@ -55,7 +55,7 @@ schemas =
     ]
     url:          type: String
     description:  type: String
-    tags:         type: [ObjectId], ref: 'tag'
+    tags:         type: [ObjectId], ref: 'tag', index:true
 
   # The Tag schema.
   Tag: Schema
