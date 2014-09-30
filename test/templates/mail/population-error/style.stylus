@@ -1,0 +1,4 @@
+@import 'non-existent'
+
+p
+  color: red

@@ -1,0 +1,38 @@
+<html>
+  <head></head>
+  <body>
+
+    <div id="container">
+
+      <div id="inner">
+
+        <h1 id="header">You're already in!</h1>
+
+        <p>
+          You have requested an invite to Webistor, and we noticed that
+          {{#if invitation.author.username}}you have already been invited by {{invitation.author.username}}!
+          {{else}}our team has already accepted your prior request.{{/if}}
+        </p>
+
+        <p>
+          All you have to do is finish your account by clicking the button below:
+        </p>
+
+        <p id="button">
+          <a href="http://www.webistor.net/register/{{invitation.token}}" target="_blank">
+            Create your account
+          </a>
+        </p>
+
+        <p>
+          As with every one of our emails, just hit reply and we'll respond right away! :)
+        </p>
+
+        <p class="bold"> - The Webistor team</p>
+
+      </div>
+
+    </div>
+
+  </body>
+</html>

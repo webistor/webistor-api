@@ -1,0 +1,291 @@
+#!/usr/bin/env coffee
+Promise = require 'bluebird'
+fs = Promise.promisifyAll require 'fs'
+path = require 'path'
+util = require 'util'
+{spawn} = require 'child_process'
+program = require 'commander'
+log = require 'node-logging'
+schemas = require '../src/schemas'
+{mongoose, User, Entry, Tag} = schemas
+mysql = require 'mysql'
+config = require '../src/config'
+token = require 'rand-token'
+handleRejections = require '../src/rejection-handler'
+
+# Promisification.
+Promise.promisifyAll User
+Promise.promisifyAll Entry
+Promise.promisifyAll Tag
+Promise.promisifyAll User.prototype
+Promise.promisifyAll Entry.prototype
+Promise.promisifyAll Tag.prototype
+
+
+##
+## COMMAND LINE INTERFACE
+##
+
+program
+.version (JSON.parse fs.readFileSync (__dirname + '/../package.json'), 'utf8').version
+.usage '[options] "mysql://<user>:<pass>@<host>/<db>"'
+.option '-d, --drop', 'remove all documents from a collection before it is imported'
+.option '-b, --backup', 'create a dump before importing'
+.option '-m, --merge', 'merge data of entries with equal URIs'
+.option '-p, --prefix <prefix>', 'Override database table prefix. Defaults to "mk".'
+.option '-v, --verbose', 'increase logging level', ((v, memo) -> ++memo), 0
+
+program.command '*'
+.description "Import data from given Webistor 4.0 MySQL Database."
+.action (input) -> migrate(input).then(handleRejections).done((->process.exit 0), (->process.exit 1))
+
+
+##
+## PROGRAM
+##
+defaults =
+  drop: false
+  backup: false
+  merge: false
+  verbose: 0
+  prefix: 'mk'
+
+migrate = (database) ->
+
+  # Extract options.
+  drop = program.drop or defaults.drop
+  backup = program.backup or defaults.backup
+  merge = program.merge or defaults.merge
+  verbose = program.verbose or defaults.verbose
+  prefix = program.prefix or defaults.prefix
+
+  # Set log-level.
+  log.setLevel switch verbose
+    when 0              then 'error'
+    when 1              then 'info'
+    when 2, verbose > 2 then 'debug'
+    else                     'error'
+
+  # Tablename prefixers.
+  c = (t) -> "#{prefix}__core_#{t}"
+  w = (t) -> "#{prefix}__webhistory__#{t}"
+
+  # Globals.
+  db = null
+  maps = {}
+
+  # Log.
+  log.dbg "Importing with following options: " +
+    util.inspect({drop, backup, merge, verbose, prefix}).replace(/\n */g, ' ')
+
+  # Start by backing up data if necessary.
+  Promise.try ->
+    return unless backup
+    log.inf "Starting backup..."
+    args = []
+
+    # Select Webistor database.
+    args.push '--db', path.basename config.database
+
+    # Create an output location.
+    args.push '--out', "dump/#{Date.now()}"
+
+    # Log.
+    log.dbg "Spawning mongodump withs args: " + util.inspect args
+
+    # Spawn the process and handle events.
+    new Promise (resolve, reject) ->
+      mongodump = spawn 'mongodump', args
+      mongodump.stderr.on 'data', log.err
+      mongodump.on 'exit', (code) ->
+        if code is 0 then do resolve
+        else reject new Error "Backup failed. Mongodump exited with code #{code}."
+    .then -> log.inf "Backup completed."
+
+  # Then connect to the MySQL database.
+  .then ->
+    log.inf "Establishing connection to database..."
+    log.dbg "Database: #{database}"
+    db = Promise.promisifyAll mysql.createConnection database
+    db.connectAsync()
+    .then -> log.inf "Successfully connected."
+
+  # Then remove own data if required.
+  .then ->
+    return unless drop
+    log.inf "Dropping current data..."
+    Promise.join User.removeAsync(), Entry.removeAsync(), Tag.removeAsync()
+    .then -> log.inf "Data dropped."
+
+  # Then import users. We need to do this first to maintain authorship information.
+  .then ->
+    log.inf "Importing users..."
+    maps.users = {}
+    db.queryAsync "SELECT id, email, username FROM #{c 'users'}"
+    .spread (rows) ->
+      log.dbg "#{rows.length} Users are being imported."
+
+      # Iterate results.
+      Promise.map rows, (row) ->
+
+        # Give the user a name if he never had one.
+        unless row.username
+          row.username = row.email.split('@')[0].toLowerCase().replace(/[^\w-_]/g, '_')
+          log.inf "Granted the name of '#{row.username}' to '#{row.email}'"
+
+        # Start the promise chain by detecting if the user is already present in the database.
+        Promise.try ->
+          return if drop
+          User.findAsync $or:[ {email:row.email}, {username:row.username} ]
+          .then (results) ->
+            for result, index in results when result.email is row.email
+              maps.users[row.id] = result.id
+              throw new Error "User is already registered."
+            for result, index in results when result.username is row.username
+              rename = "#{row.username}_#{token.suid 8}"
+              log.inf "Renaming #{row.username} to #{rename} to avoid conflicts."
+              row.username = rename
+
+        # Now that that's handled, create the new user.
+        .then ->
+          user = new User {email: row.email, username: row.username}
+          user.saveAsync().then -> maps.users[row.id] = user.id
+
+        # Log result.
+        .then -> log.dbg "Successfully imported #{row.email}."
+        .catch (ex) -> log.dbg "Skipped #{row.email}: #{ex}"
+
+      # Wait for the entire promise pool to have settled.
+      .then -> log.inf "Completed user import."
+
+  # Then import tags. They need to come before entries so that we'll have an id map for relations.
+  .then ->
+    log.inf "Importing tags..."
+    maps.tags = {}
+    maps.tag_authors = {}
+    db.queryAsync "
+      SELECT *, (
+          SELECT COUNT(tag_id) FROM #{w 'entries_to_tags'} AS e2t
+          WHERE e2t.tag_id = tags.id
+        ) AS num_entries
+      FROM #{w 'tags'} AS tags"
+
+    # Process results.
+    .spread (rows) ->
+      log.dbg "#{rows.length} Tags are being imported."
+
+      # Iterate results.
+      Promise.map rows, (row) ->
+
+        # Create a mapping of tag authors in order to fix a data corruption problem.
+        maps.tag_authors[row.id] = row.user_id
+
+        # Start the promise chain by detecting if the tag is already present in the database.
+        Promise.try ->
+          throw new Error "Could not find author #{row.user_id}." unless maps.users[row.user_id]?
+          throw new Error "Tag had no associated entries." if row.num_entries is 0
+          return if drop
+          Tag.findOneAsync author: maps.users[row.user_id], title: row.title
+          .then (result) ->
+            return unless result
+            maps.tags[row.id] = result.id
+            throw new Error "Tag is already owned by its author."
+
+        # Now that that's out of the way, create the tag.
+        .then ->
+          tag = new Tag author: maps.users[row.user_id], title: row.title, color: row.color?.slice 1
+          tag.saveAsync().then -> maps.tags[row.id] = tag.id
+
+        # Log result.
+        .then -> log.dbg "Successfully imported '#{row.title}'-tag."
+        .catch (ex) -> log.dbg "Skipped '#{row.title}'-tag: #{ex}"
+
+      # Wait for the entire promise pool to have settled.
+      .then -> log.inf "Completed tag import."
+
+  # Then import entries.
+  .then ->
+    log.inf "Importing entries..."
+
+    # Execute a query which joins tag id's as a comma-separated list.
+    db.queryAsync "
+      SELECT id, user_id, dt_created, dt_last_modified, url, title, notes, (
+          SELECT GROUP_CONCAT(tag_id) FROM #{w 'entries_to_tags'} AS e2t
+          WHERE e2t.entry_id = entries.id
+        ) AS tags
+      FROM #{w 'entries'} AS entries"
+
+    # Process results.
+    .spread (rows) ->
+      log.dbg "#{rows.length} Entries are being imported."
+
+      # Iterate results in sequence.
+      Promise.reduce rows, ((memo, row) ->
+
+        # Split CVSs into an array.
+        row.tags = (row.tags?.split ',') or []
+
+        # Map to Mongo IDs.
+        row.tags = row.tags
+        .filter (id) -> maps.tag_authors[id] is row.user_id
+        .map (id) -> maps.tags[id]
+
+        # Start the promise chain by detecting if the entry is already present in the database.
+        # If it is, then we either ignore or merge, based on what's desired.
+        Promise.try ->
+          throw new Error "Could not find author #{row.user_id}." unless maps.users[row.user_id]?
+          return unless row.url?.length > 0
+          Entry.findOneAsync author: maps.users[row.user_id], url: row.url
+          .then (result) ->
+            return unless result
+            throw new Error "Entry is already owned by its author." unless merge
+            result.description = "
+              #{result.description}\n\n#
+              MERGE: #{row.title} (#{row.dt_created.toDateString()})\n\n#{row.notes}"
+            result.created = new Date Math.min result.created.getTime(), row.dt_created.getTime()
+            result.lastModified = new Date
+            for id in row.tags when maps.tags[id]? and maps.tags[id] not in result.tags
+              result.tags.push maps.tags[id]
+            result.saveAsync()
+            .throw new Error "Entry has been merged with a pre-existing one."
+
+        # With that out of the way, let's create the entry.
+        .then ->
+          entry = new Entry
+            author: maps.users[row.user_id]
+            created: row.dt_created
+            lastModified: row.dt_last_modified
+            url: row.url
+            title: row.title
+            description: row.notes
+            tags: row.tags
+          entry.saveAsync()
+
+        # Log result.
+        .then -> log.dbg "Successfully imported '#{row.url}'."
+        .catch (ex) -> log.dbg "Skipped '#{row.url}': #{ex}"
+        .return memo
+
+      ), true
+
+      # After all entries have been processed.
+      .then -> log.inf "Completed entry import."
+
+  # Wait for the connection to finish processing queries.
+  .then -> db.endAsync()
+
+  # Log errors.
+  .catch (ex) ->
+    log.err ex.toString()
+    throw ex
+
+
+##
+## MAIN
+##
+
+# Connect to the mongoose database.
+mongoose.connect config.database
+
+# Go!
+program.parse process.argv

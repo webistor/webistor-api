@@ -1,0 +1,164 @@
+#!/usr/bin/env coffee
+fs = require 'fs'
+program = require 'commander'
+Table = require 'cli-table'
+Promise = require 'bluebird'
+randtoken = require 'rand-token'
+Mail = require '../lib/classes/mail'
+BatchMail = require '../lib/classes/batch-mail'
+schemas = require '../lib/schemas'
+{mongoose} = schemas
+Invitation = Promise.promisifyAll schemas.Invitation
+config = require '../lib/config'
+log = require 'node-logging'
+
+
+##
+## COMMAND LINE INTERFACE
+##
+
+program
+.version (JSON.parse fs.readFileSync (__dirname + '/../package.json'), 'utf8').version
+.usage '[options] <command|address>'
+.option '-l, --list', 'list email addresses instead of sending out invites'
+.option '-b, --bare', 'no pretty table when listing; useful for |less and more'
+.option '-a, --age <age>', 'select only users waiting for at least the given time'
+.option '-s, --sort <sort>', 'specify how users are sorted'
+.option '-v, --verbose', 'increase logging level'
+
+program.on '--help', -> console.log [
+  '  Examples:'
+  ''
+  '    $ invite all                   invite all users'
+  '    $ invite --list all            list all users'
+  '    $ invite next 20               invite the oldest 20 users'
+  '    $ invite bob@example.com       invite only bob'
+  '    $ invite -la "2 days" next 20  list 20 users older than two days'
+  '    $ invite -s "-email" next 5    invite the 5 users with addresses closest to the end of the alphabet'
+  ''
+  ].join "\n"
+
+program.command 'all'
+.description "Invite all users matching the options."
+.action -> invite().then -> process.exit 0
+
+program.command 'next <amount>'
+.description "Invite a limited amount of users matching the options."
+.action (input) -> invite(limit:input).then -> process.exit 0
+
+program.command '* <address>'
+.description "Invite only the user matching the given email address."
+.action (input) -> invite(email:input).then -> process.exit 0
+
+
+##
+## BUSINESS
+##
+
+invite = (options = {}) ->
+
+  # Extract options.
+  {list, bare, age, sort, verbose} = program
+  {limit, email} = options
+
+  # Set log-level.
+  log.setLevel if verbose then 'debug' else 'error'
+
+  #TODO: semantic time
+
+  # Log info.
+  log.inf (if list then "Listing " else "Inviting ") +
+          (if limit then "up to #{limit} users" else if email then email else "all users") +
+          (if age then " of the minimum age of #{age}" else "") + "."
+
+  # Build the query.
+  query = Promise.promisifyAll Invitation.find(status:'awaiting')
+  query.where {email} if email?
+  query.where {created:$lte:(Date.now() - age)} if age?
+  query.limit limit if limit?
+  query.sort sort or 'created email'
+
+  # Log info.
+  log.inf 'Querying database...'
+
+  # Start the promise chain by executing the query.
+  Promise.cast(query.exec 'find').then (invitations) ->
+
+    # Log info.
+    log.inf "Processing #{invitations.length} results..."
+
+    # List?
+    if list
+      table = unless bare then new Table head:['Email Address', 'Waiting Since'] else new Table
+        chars:
+          'top': '',    'top-mid': '',    'top-left': '',    'top-right': ''
+          'bottom': '', 'bottom-mid': '', 'bottom-left': '', 'bottom-right': ''
+          'left': '',   'left-mid': '',   'mid': '',         'mid-mid': ''
+          'right': '',  'right-mid': '',  'middle': ' - '
+        style:
+          'padding-left': 0, 'padding-right': 0
+      table.push [invitation.email, invitation.created.toDateString()] for invitation in invitations
+      return console.log table.toString()
+
+    # Nothing else to do?
+    return log.inf "That was easy." if invitations.length is 0
+
+    # Update records.
+    log.inf "Updating records..."
+    Promise.all invitations.map (invitation) ->
+      d = Promise.defer()
+      invitation.set(status: 'accepted', token: randtoken.generate 32).save d.callback
+      return d.promise
+
+    # Send mailing.
+    .then ->
+      log.inf "Sending mails..."
+      new BatchMail()
+      .from "Webistor <hello@webistor.net>"
+      .to invitations
+      .subject 'Your request has been accepted!'
+      .template 'invitations/request-accepted', (address) ->
+        email = address.getAddress()
+        break for invitation in invitations when invitation.email is email
+        return {invitation}
+      .send()
+
+    # Log result. Revert records of failed emails.
+    .then (results) ->
+      return if results.done.length is invitations.length
+
+      # Log failures.
+      log.err "#{results.failed.length} out of #{invitations.length} failed!"
+      log.dbg "#{failed.email}: " + failed.error.toString() for failed in results.failed
+
+      # Rollback failues.
+      log.inf 'Rolling back failures...'
+      Promise.all invitations
+      .filter (invitation) ->
+        results.failed.some (failed) -> failed.email.getAddress() is invitation.email
+      .map (invitation) ->
+        d = Promise.defer()
+        invitation.set(status: 'awaiting', token: null).save d.callback
+        return d.promise
+
+      # Inform someone about the severity of the event of an error in the above procedure.
+      .catch (err) ->
+        log.bad "Failed to rollback recipients who were unable to receive an email!"
+        throw err
+
+  # Log the good news.
+  .then -> log.inf "All done!"
+
+  # Log the bad news.
+  .catch (err) -> log.err err.toString()
+
+
+##
+## MAIN
+##
+
+# Connect to the database.
+mongoose.connect config.database
+
+# Go!
+program.parse process.argv
