@@ -184,6 +184,7 @@ module.exports = class SessionController extends Controller
     # Store the users ID in their session and return the user object without password.
     .then (auth) ->
       req.session.userId = auth.user._id
+      auth.expire()
       return _.omit auth.user.toObject(), 'password'
 
     # Generate a user-friendly error message.
