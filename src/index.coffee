@@ -106,12 +106,22 @@ server.use (req, res, next) ->
 # Parse request body as JSON.
 server.use json strict:true
 
-# Set up session support.
-server.use session name: 'session', store: new MongoStore db: ''
-
-# Import database schemas.
+# Import database schemas and connect to the MongoDB.
 server.db = require './schemas'
-server.db.mongoose.connect config.database
+server.db.mongoose.connect "mongodb://#{config.database.host}/#{config.database.name}"
+
+# Set up session support.
+server.use session
+  name: 'session'
+  secret: config.sessions.secret
+  resave: true
+  saveUninitialized: false
+  store: new MongoStore
+    host: config.database.host
+    db: config.database.name
+    collection: 'sessions'
+
+# console.log server.db.mongoose.connection.db.serverConfig
 
 # Instantiate controllers.
 server.sessionController = new SessionController new AuthFactory

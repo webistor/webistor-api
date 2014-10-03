@@ -66,6 +66,10 @@ schemas =
     color:  type: String, uppercase: true, match: /^[0-9A-F]{6}$/
     num:    type: Number, default: 0
 
+  # The Session schema
+  Session: Schema
+    lastAccess: type: Date
+
 
 ##
 ## EXTRA
@@ -83,6 +87,9 @@ schemas.Tag.method 'countTimesUsed', (cb) -> @model('entry').count {tags:@id}, c
 # Add text indexes for text-search support.
 schemas.Entry.index {title:'text', description:'text'}, {default_language: 'en'}
 schemas.Tag.index {title:'text'}, {default_language: 'en'}
+
+# Add a TTL-index to the session collection.
+schemas.Session.index {lastAccess: 1}, {expireAfterSeconds: config.sessions.lifetime}
 
 
 ##
