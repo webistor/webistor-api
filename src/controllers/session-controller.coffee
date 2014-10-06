@@ -220,7 +220,7 @@ module.exports = class SessionController extends Controller
     # Store the users ID in their session and return the user object without password.
     .then (auth) ->
       req.session.userId = auth.user._id
-      req.session.persistent = req.query.persistent?
+      req.session.persistent = req.body.persistent is true
       auth.expire()
       return _.omit auth.user.toObject(), 'password'
 
@@ -442,7 +442,7 @@ module.exports = class SessionController extends Controller
     # Authenticate the user. They just provided a password that is now valid.
     .then ->
       req.session.userId = id
-      req.session.persistent = req.query.persistent?
+      req.session.persistent = req.body.persistent is true
 
     # All done.
     .return "Password updated."
