@@ -236,9 +236,7 @@ module.exports = class SessionController extends Controller
 
       # Invalid credentials.
       if err.reason is AuthError.MISSMATCH
-        throw new ServerError 401, "
-          Invalid username/email or password/token. Please note that your account will be
-          locked out after too many attempts and you will not be able to log in for an hour."
+        throw new ServerError 401, "Invalid username/email or password/token."
 
       # Expired authentication token.
       if err.reason is AuthError.MISSING
