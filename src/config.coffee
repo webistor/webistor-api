@@ -1,9 +1,9 @@
 module.exports =
   domainName: 'webistor.net'
-  clientPort: 3000
-  serverPort: 3001
-  debug: true
-  logLevel: 'debug'
+  clientPort: null
+  serverPort: null
+  debug: false
+  logLevel: ['debug', 'info', 'error'][0]
   timezone: 'Europe/Amsterdam'
   publicHtml: '/absolute/path/to/public'
   whitelist: ['localhost', 'webistor.net', 'www.webistor.net']
@@ -35,7 +35,7 @@ module.exports =
 
   # Daemon settings.
   daemon:
-    enabled: false
+    enabled: true
     httpPort: 80
     adminPort: 3002
     uid: 'node'
