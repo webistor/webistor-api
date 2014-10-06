@@ -1,6 +1,7 @@
 Promise = require 'bluebird'
 _ = require 'lodash'
 ServerError = require './server-error'
+log = require 'node-logging'
 
 module.exports = class Controller
 
@@ -85,6 +86,10 @@ module.exports = class Controller
    * @chainable
   ###
   sendError: (req, res, err) ->
+
+    # Log errors.
+    log.dbg "Error generated from request to \"#{req.method.toUpperCase()} #{req.url}\":"
+    log.dbg err.stack
 
     # Fix for what seems to be a bug in Node.
     if err instanceof Error and err.message and err.name and not err.toJSON
