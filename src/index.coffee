@@ -137,7 +137,6 @@ server.post '/users/me', server.sessionController.getMiddleware 'login'
 server.delete '/users/me', server.sessionController.getMiddleware 'logout'
 server.get '/session/loginCheck', server.sessionController.getMiddleware 'isLoggedIn'
 server.post '/session/nameCheck', server.sessionController.getMiddleware 'usernameExists'
-server.get '/session/persistentLoginCookie', server.sessionController.getMiddleware 'rotatePersistentLogin'
 server.post '/password-reset', server.sessionController.getMiddleware 'sendPasswordToken'
 
 # TODO: Protect this request with anti-botting measures.

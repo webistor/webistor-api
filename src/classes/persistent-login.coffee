@@ -50,13 +50,13 @@ module.exports = class PersistentLogin
 
     # Create the Login document.
     login = new Login
-      userId: @req.session.userId
+      user: @req.session.userId
       accessToken: @newToken()
       seriesToken: @newToken()
 
     # Save it to the database and send it as a cookie.
-    login.save()
-    .then -> @setCookieData login.userId, login.accessToken, login.seriesToken
+    login.saveAsync()
+    .then => @setCookieData login.user, login.accessToken, login.seriesToken
 
   ###*
    * Get rid of any traces of the current persistent cookie.
@@ -71,7 +71,7 @@ module.exports = class PersistentLogin
       return unless login?
       login.remove()
     .then =>
-      @req.clearCookie 'login'
+      @res.clearCookie 'login'
 
   ###*
    * Generate a new access token for the current persistent cookie.
@@ -90,6 +90,9 @@ module.exports = class PersistentLogin
     # User must be logged in.
     throw new Error "User must be logged in to rotate the persistent login cookie" unless @req.session.userId?
 
+    # If no cookie is given; generate one.
+    return @generate() unless @exists()
+
     # Get the given cookie data.
     {user, accessToken, seriesToken} = @getCookieData()
 
@@ -107,8 +110,8 @@ module.exports = class PersistentLogin
       login.set 'lastAccess', new Date
 
       # Then save it to the database and the cookie.
-      login.save()
-      .then -> @setCookieData user, accessToken, seriesToken
+      login.saveAsync()
+      .then => @setCookieData user, accessToken, seriesToken
 
   ###*
    * Validate whether the cookie presented by a user is authentic.
@@ -146,7 +149,7 @@ module.exports = class PersistentLogin
       # At this point, an outdated token must have been presented. This indicates theft.
 
       # Find the victim.
-      User.findOneAsync login.userId
+      User.findOneAsync {_id:login.user}
 
       # Warn the victim and destroy their other tokenpairs.
       .then (victim) ->

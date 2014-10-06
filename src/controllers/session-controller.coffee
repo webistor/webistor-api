@@ -71,7 +71,7 @@ module.exports = class SessionController extends Controller
   isLoggedIn: (req, res) ->
 
     # Start by trying to log the user in using their persistent login cookie.
-    Promise.try ->
+    Promise.try =>
 
       # Unless they're already logged in.
       return if req.session?.userId?
@@ -83,21 +83,19 @@ module.exports = class SessionController extends Controller
       pl.authenticate()
 
       # In case of a MISSMATCH, we are going to kill all sessions associated with the user.
-      .catch AuthError.Predicate(AuthError.MISSMATCH), (err) ->
+      .catch AuthError.Predicate(AuthError.MISSMATCH), (err) =>
 
         # Remove sessions, log the event of an error.
-        Session.removeAsync(userId:req.session.userId).catch (err) ->
+        Session.removeAsync(userId:req.session.userId).catch (err) =>
           log.err "Failed to clear sessions: #{err}"
 
         # Then unset the session and warn the user.
-        .then ->
-          req.session.userId = null
-          throw new ServerError 401, "Account compromised. Please refer to your email."
+        .then =>
+          @_destroyUserSession req, res
+          .throw new ServerError 401, "Account compromised. Please refer to your email."
 
       # In case of a successful authentication, log the user in.
-      .then ->
-        req.session.userId = pl.getCookieData().user
-        req.session.persistent = true
+      .then => @_createUserSession req, res, pl.getCookieData().user, true
 
     # Make sure the user exists.
     .then -> User.countAsync {_id:req.session.userId}
@@ -146,7 +144,7 @@ module.exports = class SessionController extends Controller
    * @return {Promise} A promise of a user document. Gets rejected with an appropriate
    *                   error message when the credentials are unsatisfactory.
   ###
-  login: (req) ->
+  login: (req, res) ->
 
     # Figure out by what means to find the user.
     find = switch
@@ -218,11 +216,10 @@ module.exports = class SessionController extends Controller
       .return auth
 
     # Store the users ID in their session and return the user object without password.
-    .then (auth) ->
-      req.session.userId = auth.user._id
-      req.session.persistent = req.body.persistent is true
+    .then (auth) =>
       auth.expire()
-      return _.omit auth.user.toObject(), 'password'
+      @_createUserSession req, res, auth.user._id, req.body.persistent is true
+      .return _.omit auth.user.toObject(), 'password'
 
     # Generate a user-friendly error message.
     .catch AuthError, (err) ->
@@ -350,9 +347,7 @@ module.exports = class SessionController extends Controller
    * @return {String} Status message.
   ###
   logout: (req, res) ->
-    delete req.session.userId
-    delete req.session.persistent
-    new PersistentLogin(req, res).destroy()
+    @_destroyUserSession req, res
     .return "Successfully logged out."
 
   ###*
@@ -438,9 +433,17 @@ module.exports = class SessionController extends Controller
       user.saveAsync()
 
     # Authenticate the user. They just provided a password that is now valid.
-    .then ->
-      req.session.userId = id
-      req.session.persistent = req.body.persistent is true
+    .then =>
+      @_createUserSession req, res, id, req.body.persistent is true
 
     # All done.
     .return "Password updated."
+
+  _createUserSession: (req, res, id, persistent = false) ->
+    req.session.userId = id
+    return Promise.resolve() unless persistent
+    new PersistentLogin(req, res).rotate()
+
+  _destroyUserSession: (req, res) ->
+    req.session.destroy()
+    new PersistentLogin(req, res).destroy()
