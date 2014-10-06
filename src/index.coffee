@@ -11,6 +11,7 @@ InvitationController = require './controllers/invitation-controller'
 favicon = require 'static-favicon'
 {json} = require 'body-parser'
 session = require 'express-session'
+cookie = require 'cookie-parser'
 MongoStore = require 'express-session-mongo'
 serveStatic = require 'serve-static'
 countTagsTimesUsed = require './tasks/count-tags-times-used'
@@ -110,18 +111,19 @@ server.use json strict:true
 server.db = require './schemas'
 server.db.mongoose.connect "mongodb://#{config.database.host}/#{config.database.name}"
 
+# Set up cookie support.
+server.use cookie()
+
 # Set up session support.
 server.use session
   name: 'session'
-  secret: config.sessions.secret
+  secret: config.authentication.secret
   resave: true
   saveUninitialized: false
   store: new MongoStore
     host: config.database.host
     db: config.database.name
     collection: 'sessions'
-
-# console.log server.db.mongoose.connection.db.serverConfig
 
 # Instantiate controllers.
 server.sessionController = new SessionController new AuthFactory
@@ -135,6 +137,7 @@ server.post '/users/me', server.sessionController.getMiddleware 'login'
 server.delete '/users/me', server.sessionController.getMiddleware 'logout'
 server.get '/session/loginCheck', server.sessionController.getMiddleware 'isLoggedIn'
 server.post '/session/nameCheck', server.sessionController.getMiddleware 'usernameExists'
+server.get '/session/persistentLoginCookie', server.sessionController.getMiddleware 'rotatePersistentLogin'
 server.post '/password-reset', server.sessionController.getMiddleware 'sendPasswordToken'
 
 # TODO: Protect this request with anti-botting measures.

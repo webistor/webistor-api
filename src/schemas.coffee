@@ -66,10 +66,16 @@ schemas =
     color:  type: String, uppercase: true, match: /^[0-9A-F]{6}$/
     num:    type: Number, default: 0
 
-  # The Session schema
+  # The Session schema.
   Session: Schema
     lastAccess: type: Date
 
+  # The login schema.
+  Login: Schema
+    user:        type: ObjectId, ref: 'user', required: true
+    seriesToken: type: String, required: true
+    accessToken: type: String, required: true
+    lastAccess:  type: Date, default: Date.now
 
 ##
 ## EXTRA
@@ -89,7 +95,7 @@ schemas.Entry.index {title:'text', description:'text'}, {default_language: 'en'}
 schemas.Tag.index {title:'text'}, {default_language: 'en'}
 
 # Add a TTL-index to the session collection.
-schemas.Session.index {lastAccess: 1}, {expireAfterSeconds: config.sessions.lifetime}
+schemas.Session.index {lastAccess: 1}, {expireAfterSeconds: config.authentication.sessionLifetime}
 
 
 ##

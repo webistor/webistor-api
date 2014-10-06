@@ -13,10 +13,11 @@ module.exports =
     host: 'localhost'
     name: 'webistor'
 
-  # Session settings.
-  sessions:
+  # Authentication settings.
+  authentication:
     secret: 'sesamopenu',
-    lifetime: 1000*60*60*24
+    sessionLifetime: 1000*60*60*24
+    persistentCookieLifetime: 1000*60*60*24*14
 
   # The release stage is used mainly for access control.
   releaseStage: ['alpha', 'privateBeta', 'openBeta', 'publicBeta', 'postRelease'][1]

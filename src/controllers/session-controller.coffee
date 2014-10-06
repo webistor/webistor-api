@@ -5,8 +5,9 @@ AuthError = require '../classes/auth-error'
 ServerError = require './base/server-error'
 log = require 'node-logging'
 schemas = require '../schemas'
-{mongoose, User, Invitation} = schemas
+{mongoose, User, Invitation, Session} = schemas
 Mail = require '../classes/mail'
+PersistentLogin = require '../classes/persistent-login'
 config = require '../config'
 
 # Promisification.
@@ -14,6 +15,8 @@ Promise.promisifyAll User
 Promise.promisifyAll User.prototype
 Promise.promisifyAll Invitation
 Promise.promisifyAll Invitation.prototype
+Promise.promisifyAll Session
+Promise.promisifyAll Session.prototype
 
 module.exports = class SessionController extends Controller
 
@@ -60,14 +63,49 @@ module.exports = class SessionController extends Controller
   ###*
    * Return true if a user is logged in, false otherwise.
    *
-   * @param {http.IncomingMessage} req The Express request object.
+   * If the user does not have a session but did send a persistent-login-cookie, this
+   * method will authenticate the user based on the cookie and rotate the cookie value.
    *
-   * @return {Boolean}
+   * @return {Promise} A promise of a boolean.
   ###
-  isLoggedIn: (req) ->
-    return false unless req.session?.userId?
-    User.countAsync {_id:req.session.userId}
+  isLoggedIn: (req, res) ->
+
+    # Start by trying to log the user in using their persistent login cookie.
+    Promise.try ->
+
+      # Unless they're already logged in.
+      return if req.session?.userId?
+
+      # Create the PersistentLogin instance.
+      pl = new PersistentLogin req, res
+
+      # Authenticate the cookie.
+      pl.authenticate()
+
+      # In case of a MISSMATCH, we are going to kill all sessions associated with the user.
+      .catch AuthError.Predicate(AuthError.MISSMATCH), (err) ->
+
+        # Remove sessions, log the event of an error.
+        Session.removeAsync(userId:req.session.userId).catch (err) ->
+          log.err "Failed to clear sessions: #{err}"
+
+        # Then unset the session and warn the user.
+        .then ->
+          req.session.userId = null
+          throw new ServerError 401, "Account compromised. Please refer to your email."
+
+      # In case of a successful authentication, log the user in.
+      .then ->
+        req.session.userId = pl.getCookieData().user
+        req.session.persistent = true
+
+    # Make sure the user exists.
+    .then -> User.countAsync {_id:req.session.userId}
     .then (amount) -> amount is 1
+
+    # In case of an AuthError, we're going to assume the user is not logged-in.
+    .catch AuthError, (err) -> false
+
 
   ###*
    * Throw an exception if the request was not made by a logged in user. Return null otherwise.
@@ -104,8 +142,6 @@ module.exports = class SessionController extends Controller
    *
    * In theory, this method should not need protection against bots by taking a number of
    * security measures. This happens to provide users with a more friendly way to log in.
-   *
-   * @param {http.IncomingMessage} req The Express request object.
    *
    * @return {Promise} A promise of a user document. Gets rejected with an appropriate
    *                   error message when the credentials are unsatisfactory.
@@ -184,6 +220,7 @@ module.exports = class SessionController extends Controller
     # Store the users ID in their session and return the user object without password.
     .then (auth) ->
       req.session.userId = auth.user._id
+      req.session.persistent = req.query.persistent?
       auth.expire()
       return _.omit auth.user.toObject(), 'password'
 
@@ -214,6 +251,15 @@ module.exports = class SessionController extends Controller
       throw new ServerError 500, "
         Something went wrong while attempting to log you in. Try again later. If this
         problem persists, please contact support."
+
+  ###*
+   * Create or modify the persistent log-in cookie.
+   *
+   * @method rotatePersistentLogin
+  ###
+  rotatePersistentLogin: (req, res) ->
+    return null unless req.session?.userId? and req.session?.persistent is true
+    new PersistentLogin(req, res).rotate().return(null)
 
   ###*
    * Check for the existence of a username.
@@ -303,13 +349,13 @@ module.exports = class SessionController extends Controller
   ###*
    * Log a user out, removing them from their session.
    *
-   * @param {http.IncomingMessage} req The Express request object.
-   *
    * @return {String} Status message.
   ###
-  logout: (req) ->
+  logout: (req, res) ->
     delete req.session.userId
-    return "Successfully logged out."
+    delete req.session.persistent
+    new PersistentLogin(req, res).destroy()
+    .return "Successfully logged out."
 
   ###*
    * Send a password reset token to a given email address.
@@ -394,7 +440,9 @@ module.exports = class SessionController extends Controller
       user.saveAsync()
 
     # Authenticate the user. They just provided a password that is now valid.
-    .then -> req.session.userId = id
+    .then ->
+      req.session.userId = id
+      req.session.persistent = req.query.persistent?
 
     # All done.
     .return "Password updated."
