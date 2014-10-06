@@ -94,8 +94,9 @@ schemas.Tag.method 'countTimesUsed', (cb) -> @model('entry').count {tags:@id}, c
 schemas.Entry.index {title:'text', description:'text'}, {default_language: 'en'}
 schemas.Tag.index {title:'text'}, {default_language: 'en'}
 
-# Add a TTL-index to the session collection.
+# Add a TTL-index to the session and login collections.
 schemas.Session.index {lastAccess: 1}, {expireAfterSeconds: config.authentication.sessionLifetime}
+schemas.Login.index {lastAccess: 1}, {expireAfterSeconds: config.authentication.persistentCookieLifetime}
 
 
 ##
