@@ -1,14 +1,23 @@
 module.exports =
   domainName: 'webistor.net'
-  clientPort: 3000
-  serverPort: 3001
-  debug: true
+  clientPort: null
+  serverPort: null
+  debug: false
+  logLevel: ['debug', 'info', 'error'][0]
   timezone: 'Europe/Amsterdam'
   publicHtml: '/absolute/path/to/public'
-  database: 'mongodb://localhost/webistor'
-  logLevel: 'debug'
   whitelist: ['localhost', 'webistor.net', 'www.webistor.net']
-  sessionKeys: ['sesamopenu']
+
+  # Database settings.
+  database:
+    host: 'localhost'
+    name: 'webistor'
+
+  # Authentication settings.
+  authentication:
+    secret: 'sesamopenu',
+    sessionLifetime: 1000*60*60*24
+    persistentCookieLifetime: 1000*60*60*24*14
 
   # The release stage is used mainly for access control.
   releaseStage: ['alpha', 'privateBeta', 'openBeta', 'publicBeta', 'postRelease'][1]
@@ -27,7 +36,7 @@ module.exports =
 
   # Daemon settings.
   daemon:
-    enabled: false
+    enabled: true
     httpPort: 80
     adminPort: 3002
     uid: 'node'
