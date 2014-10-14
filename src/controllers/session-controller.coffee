@@ -4,8 +4,7 @@ _ = require 'lodash'
 AuthError = require '../classes/auth-error'
 ServerError = require './base/server-error'
 log = require 'node-logging'
-schemas = require '../schemas'
-{mongoose, User, Invitation, Session} = schemas
+{mongoose, User, Invitation, Session} = require '../schemas'
 Mail = require '../classes/mail'
 PersistentLogin = require '../classes/persistent-login'
 config = require '../config'
@@ -77,10 +76,10 @@ module.exports = class SessionController extends Controller
       return if req.session?.userId?
 
       # Create the PersistentLogin instance.
-      pl = new PersistentLogin req, res
+      persistentLogin = new PersistentLogin req, res
 
       # Authenticate the cookie.
-      pl.authenticate()
+      persistentLogin.authenticate()
 
       # In case of a MISSMATCH, we are going to kill all sessions associated with the user.
       .catch AuthError.Predicate(AuthError.MISSMATCH), (err) =>
@@ -95,7 +94,7 @@ module.exports = class SessionController extends Controller
           .throw new ServerError 401, "Account compromised. Please refer to your email."
 
       # In case of a successful authentication, log the user in.
-      .then => @_createUserSession req, res, pl.getCookieData().user, true
+      .then => @_createUserSession req, res, persistentLogin.getCookieData().user, true
 
     # Make sure the user exists.
     .then -> User.countAsync {_id:req.session.userId}
