@@ -155,7 +155,7 @@ module.exports = class PersistentLogin
       .then (victim) ->
 
         # If the victim doesn't exist; who cares that someone is trying to steal from them?
-        throw new AuthError AuthError.MISSING, "The user does not exist." unless victim?
+        throw new AuthError AuthError.MISSMATCH, "The user does not exist." unless victim?
 
         # Log this event.
         log.inf "Possible authentication cookie leak detected for #{victim.email}."
