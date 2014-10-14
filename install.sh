@@ -54,6 +54,3 @@ sudo -u $UNAME -- bash -c "
   nano app/config.coffee
   brunch build --production
 " || exit $?
-
-# Start the server.
-service webistor start
