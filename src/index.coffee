@@ -10,8 +10,12 @@ TagController = require './controllers/tag-controller'
 InvitationController = require './controllers/invitation-controller'
 favicon = require 'static-favicon'
 {json} = require 'body-parser'
-session = require 'cookie-session'
+session = require 'express-session'
+cookie = require 'cookie-parser'
+MongoStore = require 'express-session-mongo'
 serveStatic = require 'serve-static'
+countTagsTimesUsed = require './tasks/count-tags-times-used'
+
 
 ##
 ## SHARED
@@ -35,16 +39,38 @@ client = express()
 
 # Content Security Policy.
 client.use (req, res, next) ->
+
+  # Arrays of whitelisted domains for styles and fonts.
+  styleDomains = ['fonts.googleapis.com', 'netdna.bootstrapcdn.com']
+  fontDomains = ['themes.googleusercontent.com', 'netdna.bootstrapcdn.com', 'fonts.gstatic.com']
+
+  # Chrome implemented CSP properly.
+  if /Chrome/.test req.headers['user-agent']
+    styles = styleDomains.join(' ')
+    fonts = fontDomains.join(' ')
+
+  # Others didn't.
+  else
+    styles =
+      styleDomains.map((domain) -> "http://#{domain}").join(' ') + ' ' +
+      styleDomains.map((domain) -> "https://#{domain}").join(' ')
+    fonts =
+      fontDomains.map((domain) -> "http://#{domain}").join(' ') + ' ' +
+      fontDomains.map((domain) -> "https://#{domain}").join(' ')
+
+  # Send the CSP header.
   res.header 'Content-Security-Policy', [
     "default-src 'none'"
-    "style-src 'self' http://fonts.googleapis.com/ http://netdna.bootstrapcdn.com/"
-    "font-src 'self' http://themes.googleusercontent.com/ http://netdna.bootstrapcdn.com/"
+    "style-src 'self' 'unsafe-inline' " + styles
+    "font-src 'self' " + fonts
     "script-src 'self' 'unsafe-eval'"
     "img-src 'self'"
-    "connect-src http://api.#{config.domainName}:#{config.httpPort}/" + (
-      if config.debug then " ws://localhost:9485/ http://localhost:#{config.serverPort}" else ''
+    "connect-src api.#{config.domainName}:#{config.daemon.httpPort}" + (
+      if config.debug then " ws://localhost:9485/ localhost:#{config.serverPort}" else ''
     )
   ].join(';\n')
+
+  # Next middleware.
   next()
 
 # Set up shared middleware.
@@ -52,7 +78,7 @@ client.use favicon
 
 # Set up routing to serve up static files from the /public folder, or index.html.
 client.use serveStatic config.publicHtml
-client.get '*', (req, res) -> res.sendfile "#{config.publicHtml}/index.html"
+client.get '*', (req, res) -> res.sendFile "#{config.publicHtml}/index.html"
 
 # Start listening on the client port.
 client.listen config.clientPort if config.clientPort
@@ -78,18 +104,26 @@ server.use (req, res, next) ->
       return res.end()
   next()
 
-# Set up shared middleware.
-# server.use favicon
-
 # Parse request body as JSON.
 server.use json strict:true
 
-# Set up session support.
-server.use session key: 'session', keys: config.sessionKeys, signed: true
-
-# Import database schemas.
+# Import database schemas and connect to the MongoDB.
 server.db = require './schemas'
-server.db.mongoose.connect config.database
+server.db.mongoose.connect "mongodb://#{config.database.host}/#{config.database.name}"
+
+# Set up cookie support.
+server.use cookie()
+
+# Set up session support.
+server.use session
+  name: 'session'
+  secret: config.authentication.secret
+  resave: true
+  saveUninitialized: false
+  store: new MongoStore
+    host: config.database.host
+    db: config.database.name
+    collection: 'sessions'
 
 # Instantiate controllers.
 server.sessionController = new SessionController new AuthFactory
@@ -114,24 +148,30 @@ ensureLogin = server.sessionController.getMiddleware 'ensureLogin'
 ensureOwnership = server.sessionController.getMiddleware 'ensureOwnership'
 
 # Route: Set up entry REST routes.
+server.get '/entries', ensureLogin
+server.get '/entries', server.entryController.getMiddleware 'search'
 server.db.Entry.methods ['get', 'post', 'put', 'delete']
 server.db.Entry.before 'get', ensureOwnership
 server.db.Entry.before 'post', ensureOwnership
+server.db.Entry.before 'post', server.entryController.getMiddleware 'ensureUniqueURI'
+server.db.Entry.before 'post', server.entryController.getMiddleware 'detectDirtyTags'
+server.db.Entry.after 'post', server.entryController.getMiddleware 'cacheDirtyTags'
 server.db.Entry.before 'put', ensureOwnership
+server.db.Entry.before 'put', server.entryController.getMiddleware 'ensureUniqueURI'
+server.db.Entry.before 'put', server.entryController.getMiddleware 'detectDirtyTags'
+server.db.Entry.after 'put', server.entryController.getMiddleware 'cacheDirtyTags'
 server.db.Entry.before 'delete', ensureOwnership
+server.db.Entry.before 'delete', server.entryController.getMiddleware 'detectDirtyTags'
+server.db.Entry.after 'delete', server.entryController.getMiddleware 'cacheDirtyTags'
 server.db.Entry.register server, '/entries'
-server.get '/entries', ensureLogin
-server.get '/entries', server.entryController.getMiddleware 'search'
 
 # Route: Set up tag REST routes.
 server.db.Tag.methods ['get', 'post', 'put', 'delete']
 server.db.Tag.before 'get', ensureOwnership
+server.db.Tag.before 'get', server.entryController.getMiddleware 'updateDirtyTags'
 server.db.Tag.before 'post', ensureOwnership
 server.db.Tag.before 'put', ensureOwnership
 server.db.Tag.before 'delete', ensureOwnership
-server.db.Tag.after 'get', server.tagController.getMiddleware 'addNum'
-server.db.Tag.after 'post', server.tagController.getMiddleware 'addNum'
-server.db.Tag.after 'put', server.tagController.getMiddleware 'addNum'
 server.db.Tag.register server, '/tags'
 server.patch '/tags', ensureLogin
 server.patch '/tags', server.tagController.getMiddleware 'patch'
@@ -147,18 +187,63 @@ server.listen config.serverPort if config.serverPort
 
 
 ##
-## PROXY
+## DAEMON
 ##
 
-# Create a super simple "proxy" server.
-proxy = http.createServer (req) ->
-  root = config.domainName
-  switch req.headers.host.split(':')[0]
-    when root, "www.#{root}" then client arguments...
-    when "api.#{root}" then server arguments...
+# Only perform daemon related setup if enabled.
+if config.daemon?.enabled
 
-# Attempt to listen on the HTTP port.
-proxy.listen config.httpPort if config.httpPort
+  # Better not have debug mode enabled past this point.
+  log.err "WARNING: Ensure debug mode is disabled in a production environment." if config.debug
 
-# Export our servers.
-module.exports = {client, server, proxy} if config.debug
+  # Create a simple "proxy" server which will forward requests made to the daemon port
+  # to the right express server.
+  proxy = http.createServer (req, res) ->
+    root = config.domainName
+    host = req.headers.host.split(':')[0]
+    switch host
+      when root
+        res.writeHead 301, Location: "http://www.#{root}#{req.url}"
+        res.end()
+      when "www.#{root}" then client arguments...
+      when "api.#{root}" then server arguments...
+      else
+        body = "Host #{host} not recognized. This might be due to bad server configuration."
+        res.writeHead 400, "Invalid host.", {
+          'Content-Length': body.length
+          'Content-Type': 'text/plain'
+        }
+        res.end body
+
+  # Listen on the set http port. Downgrade process permissions once set up.
+  proxy.listen config.daemon.httpPort, ->
+    process.setgid config.daemon.gid
+    process.setuid config.daemon.uid
+
+  # Create an admin server.
+  admin = express()
+
+  # Bring the application to an idle state.
+  admin.get '/shutdown', (req, res) ->
+    server.db.disconnect client.close server.close proxy.close -> res.status(200).end()
+
+  # Listen on admin port.
+  admin.listen config.daemon.adminPort
+
+
+##
+## MAIN
+##
+
+log.dbg "Counting the usage times on all tags..."
+countTagsTimesUsed()
+.catch (err) -> log.err "Failed counting tags: #{err}"
+.done -> log.dbg "Finished counting tags."
+
+
+##
+## EXPORTS
+##
+
+# Export our servers when in debug mode.
+module.exports = {client, server, proxy, admin} if config.debug
