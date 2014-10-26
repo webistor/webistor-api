@@ -9,7 +9,7 @@ EmailAddress = require './email-address'
 module.exports = class Mail
 
   # Constants.
-  @TEMPLATE_DIRECTORY: path.resolve __dirname, '../templates/mail'
+  @TEMPLATE_DIRECTORY: path.resolve __dirname, '../../templates/mail'
   @TEMPLATE_DEFAULTS: {paths:[@TEMPLATE_DIRECTORY]}
   @R_SPLIT_ADDRESSES: /\s*[,;]\s*/
 

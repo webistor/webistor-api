@@ -30,11 +30,11 @@ describe "The Tag model", ->
       num.must.be 10
       done()
 
-  it "#countEntries()", (done) ->
+  it "#countTimesUsed()", (done) ->
     Tag.findOne {}, onSuccess (tag) ->
-      tag.must.have.property 'countEntries'
-      tag.countEntries.must.be.a.function()
-      tag.countEntries onSuccess (num) ->
+      tag.must.have.property 'countTimesUsed'
+      tag.countTimesUsed.must.be.a.function()
+      tag.countTimesUsed onSuccess (num) ->
         num.must.be.a.number()
         done()
 

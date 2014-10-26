@@ -1,8 +1,9 @@
 require('bluebird').longStackTraces()
 module.exports = config = require '../src/config'
-config.clientPort = false
-config.serverPort = false
-config.httpPort = false
-config.database = 'mongodb://localhost/webistor-test'
+config.domainName = 'localhost'
+config.clientPort = null
+config.serverPort = null
+config.daemon = null
+config.database = host:'localhost', name:'webistor-test'
 config.logLevel = 'debug'
 config.debug = true
