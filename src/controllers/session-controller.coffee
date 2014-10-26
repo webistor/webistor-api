@@ -407,7 +407,7 @@ module.exports = class SessionController extends Controller
    *
    * @return {String} Status message.
   ###
-  resetPassword: (req) ->
+  resetPassword: (req, res) ->
 
     # Ensure the data is present.
     id = req.body.id or throw new ServerError 400, "User ID missing."
@@ -417,11 +417,23 @@ module.exports = class SessionController extends Controller
     # Ensure the token is present and usable.
     unless @passwordTokenAuth[id]? and not @passwordTokenAuth[id].isExpired()
       throw new ServerError 401, "The token you are using is not present on the server. In
-        most cases this means that the token has expired. You can only use a reset token
-        for up to an hour after generating it."
+        most cases this means that the token has expired. You can create a new token by
+        submitting another password reset request."
 
     # Validate the token.
     (auth = @passwordTokenAuth[id]).authenticateToken token
+
+    # Catch errors and translate them to something the user can work with.
+    .catch AuthError.Predicate(AuthError.EXPIRED), (err) ->
+      throw new ServerError 400, "The authentication token you are using has expired. This
+        means too much time has passed between now and the request for the token. You can
+        create a new token by submitting another password reset request."
+    .catch AuthError.Predicate(AuthError.LOCKED), (err) ->
+      throw new ServerError 400, "Too many attempts to log into your account have been
+        made recently. To protect your account from theft it has been locked for an hour."
+    .catch AuthError.Predicate(AuthError.MISSING), (err) ->
+      throw new ServerError 400, "This token appears to have been used already. You can
+        create a new token by submitting another password reset request."
 
     # If the token is valid, find the user.
     .then -> User.findByIdAsync id
