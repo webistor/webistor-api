@@ -21,9 +21,9 @@ module.exports = class FeedbackController extends Controller
     throw new ServerError 400, "No subject given." unless req.body.subject
 
     # Send an email to hello@webistor.net.
-    new Mail()
+    return new Mail()
     .from req.body.email
-    .to 'hello@webistor.net'
+    .to "team@tuxion.nl"
     .subject "Webistor Feedback - #{req.body.subject}"
-    .template "feedback/contribution", {req.body}
+    .template "feedback/contribution", {req}
     .send()
