@@ -4,10 +4,12 @@ cookie = require 'cookie-parser'
 session = require 'express-session'
 MongoStore = require 'express-session-mongo'
 
+EntryController = require './controllers/entry-controller'
+FeedbackController = require './controllers/feedback-controller'
 InvitationController = require './controllers/invitation-controller'
 SessionController = require './controllers/session-controller'
-EntryController = require './controllers/entry-controller'
 TagController = require './controllers/tag-controller'
+
 AuthFactory = require './classes/auth-factory'
 
 ###*
@@ -112,6 +114,9 @@ module.exports = (config, opts) ->
   server.post '/invitations/request', server.invitationController.getMiddleware 'request'
   server.post '/invitations', ensureLogin
   server.post '/invitations',  server.invitationController.getMiddleware 'invite'
+
+  # Route: Set up feedback related routes.
+  server.post '/feedback/contribution', server.feedbackController.getMiddleware 'contribution'
 
   # Start listening on the server port.
   server.listen config.serverPort if config.serverPort
