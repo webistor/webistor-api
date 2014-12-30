@@ -25,5 +25,5 @@ module.exports = class FeedbackController extends Controller
     .from req.body.email
     .to 'hello@webistor.net'
     .subject "Webistor Feedback - #{req.body.subject}"
-    .body req.body.message
+    .template "feedback/contribution", {req.body}
     .send()
