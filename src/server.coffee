@@ -62,6 +62,7 @@ module.exports = (config, opts) ->
   # Instantiate controllers.
   server.sessionController = new SessionController new AuthFactory
   server.entryController = new EntryController
+  server.feedbackController = new FeedbackController
   server.invitationController = new InvitationController
 
   # Route: Set up user system routes.
