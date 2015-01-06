@@ -17,7 +17,7 @@ module.exports = class FeedbackController extends Controller
   ###
   contribution: (req, res) ->
 
-    # Ensure an subject was given.
+    # Ensure a subject was given.
     throw new ServerError 400, "No subject given." unless req.body.subject
 
     # Send an email to hello@webistor.net.

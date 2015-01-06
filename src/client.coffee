@@ -47,7 +47,7 @@ module.exports = (config, opts) ->
       "font-src 'self' " + fonts
       "script-src 'self' 'unsafe-eval'"
       "img-src 'self'"
-      "connect-src api.#{config.domainName}:#{config.proxy.httpPort}" + (
+      "connect-src api.#{config.domainName}" + (
         if config.debug then " ws://localhost:9485/ localhost:#{config.serverPort}" else ''
       )
     ].join(';\n')
