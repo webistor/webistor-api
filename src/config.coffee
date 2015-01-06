@@ -1,14 +1,14 @@
 module.exports =
   debug: false
-  logLevel: ['debug', 'info', 'error'][0]
+  logLevel: ['debug', 'info', 'error'][1]
   
   domainName: 'webistor.net'
   timezone: 'Europe/Amsterdam'
   clientPort: null
   serverPort: null
   
-  stableHtml: '/var/www/webistor.net/app-stable/public/'
-  newHtml: '/var/www/webistor.net/app-new/public/'
+  stableHtml: '/home/node/webistor/app-stable/public/'
+  newHtml: '/home/node/webistor/app-new/public/'
   
   # For Content Security Policy
   whitelist: ['localhost', 'webistor.net', 'www.webistor.net', 'new.webistor.net']
