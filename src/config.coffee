@@ -41,6 +41,7 @@ module.exports =
 
   # Proxy settings.
   proxy:
+    redirectToHttps: true
     enabled: true
     httpPort: 80
     adminPort: 3002

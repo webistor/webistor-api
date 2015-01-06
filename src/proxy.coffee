@@ -16,9 +16,10 @@ module.exports = (config, opts) ->
   proxyServer = http.createServer (req, res) ->
     root = config.domainName
     host = req.headers.host.split(':')[0]
+    schema = if config.redirectToHttps then 'https' else 'http'
     switch host
       when root
-        res.writeHead 301, Location: "http://www.#{root}#{req.url}"
+        res.writeHead 301, Location: "#{schema}://www.#{root}#{req.url}"
         res.end()
       when "www.#{root}" then opts.stableClient arguments...
       when "new.#{root}" then opts.newClient arguments...
