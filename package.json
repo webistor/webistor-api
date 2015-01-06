@@ -1,0 +1,50 @@
+{
+  "name": "webistor-api",
+  "version": "0.6.1-beta",
+  "description": "Webistor server API",
+  "main": "lib/index.js",
+  "scripts": {
+    "start": "node lib/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Tuxion/webistor-api.git"
+  },
+  "author": "Avaq <aldwin.vlasblom@gmail.com>",
+  "license": "ISC",
+  "private": true,
+  "dependencies": {
+    "address-rfc2822": "0.0.2",
+    "bcrypt": "~0.7",
+    "bluebird": "~1",
+    "body-parser": "~1",
+    "cli-table": "~0.3",
+    "commander": "~2",
+    "cookie-parser": "^1.3.3",
+    "email-templates": "~0.1",
+    "express": "~4",
+    "express-session": "^1.8.2",
+    "express-session-mongo": "^0.1.0",
+    "lodash": "~2",
+    "mkdirp": "^0.5.0",
+    "mongodb": "*",
+    "mongoose": "~3",
+    "mysql": "^2.4.0",
+    "node-logging": "*",
+    "node-restful": "git+https://github.com/Tuxion/node-restful.git",
+    "nodemailer": "~0.6",
+    "open": "0.0.5",
+    "rand-token": "~0.2",
+    "rfc822-validate": "~1",
+    "serve-static": "~1",
+    "static-favicon": "~1"
+  },
+  "devDependencies": {
+    "coffee-script": "~1.7",
+    "mocha": "~1",
+    "must": "~0.11",
+    "nodemon": "~1.0",
+    "sinon": "^1.10.3",
+    "supertest": "~0.11"
+  }
+}
