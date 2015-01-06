@@ -384,15 +384,15 @@ module.exports = class SessionController extends Controller
       auth = @passwordTokenAuth[user.id] or= @authFactory.create user, => delete @passwordTokenAuth[user.id]
 
       # Generate a token with which they can reset their password.
-      token = auth.generateToken()
-
-      # Send them the token.
-      (new Mail)
-      .to user
-      .from "Webistor Team <hello@webistor.net>"
-      .subject "Your password reset ticket"
-      .template "account/password-token", {user, token}
-      .send()
+      auth.generateToken().then (token) ->
+        
+        # Send them the token.
+        (new Mail)
+        .to user
+        .from "Webistor Team <hello@webistor.net>"
+        .subject "Your password reset ticket"
+        .template "account/password-token", {user, token}
+        .send()
 
     # Done.
     .return "Mail sent."

@@ -6,7 +6,7 @@ log = require 'node-logging'
 # Request options.
 options =
   host: "localhost"
-  port: config.daemon.adminPort
+  port: config.proxy.adminPort
   path: "/shutdown"
 
 # Create request.

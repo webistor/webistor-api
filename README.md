@@ -1,4 +1,4 @@
-# Webistor API - Version 0.6.1 Beta
+# Webistor API - Version 0.7.0 Beta
 
 ## Installing (Linux Debian)
 

@@ -1,6 +1,6 @@
 {
   "name": "webistor-api",
-  "version": "0.6.1-beta",
+  "version": "0.7.0-beta",
   "description": "Webistor server API",
   "main": "lib/index.js",
   "scripts": {

@@ -1,12 +1,17 @@
 module.exports =
+  debug: false
+  logLevel: ['debug', 'info', 'error'][1]
+  
   domainName: 'webistor.net'
+  timezone: 'Europe/Amsterdam'
   clientPort: null
   serverPort: null
-  debug: false
-  logLevel: ['debug', 'info', 'error'][0]
-  timezone: 'Europe/Amsterdam'
-  publicHtml: '/absolute/path/to/public'
-  whitelist: ['localhost', 'webistor.net', 'www.webistor.net']
+  
+  stableHtml: '/home/node/webistor/app-stable/public/'
+  newHtml: '/home/node/webistor/app-new/public/'
+  
+  # For Content Security Policy
+  whitelist: ['localhost', 'webistor.net', 'www.webistor.net', 'new.webistor.net']
 
   # Database settings.
   database:
@@ -34,8 +39,9 @@ module.exports =
   # An array of usernames which users are not allowed to take.
   reservedUserNames: ['me']
 
-  # Daemon settings.
-  daemon:
+  # Proxy settings.
+  proxy:
+    redirectToHttps: true
     enabled: true
     httpPort: 80
     adminPort: 3002
