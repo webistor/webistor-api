@@ -17,10 +17,10 @@ module.exports = (config, opts) ->
     root = config.domainName
     host = req.headers.host.split(':')[0]
     switch host
-      when root
-        res.writeHead 301, Location: "http://www.#{root}#{req.url}"
+      when "www." + root
+        res.writeHead 301, Location: "https://#{root}#{req.url}"
         res.end()
-      when "www.#{root}" then opts.stableClient arguments...
+      when "#{root}" then opts.stableClient arguments...
       when "new.#{root}" then opts.newClient arguments...
       when "api.#{root}" then opts.apiServer arguments...
       else
