@@ -112,6 +112,7 @@ module.exports = class Auth
     return Promise.reject new AuthError AuthError.EXPIRED, "Auth instance expired." if @isExpired()
     return Promise.reject new AuthError AuthError.LOCKED, "Auth instance locked." if @isLocked()
     @token = randtoken.generate 32
+    Promise.resolve @token
 
   ###*
    * Determine if this authentication session is locked for any reason.
