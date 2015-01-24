@@ -202,10 +202,10 @@ if config.daemon?.enabled
     root = config.domainName
     host = req.headers.host.split(':')[0]
     switch host
-      when root
-        res.writeHead 301, Location: "http://www.#{root}#{req.url}"
+      when 'www' + root
+        res.writeHead 301, Location: "https://#{root}#{req.url}"
         res.end()
-      when "www.#{root}" then client arguments...
+      when "#{root}" then client arguments...
       when "api.#{root}" then server arguments...
       else
         body = "Host #{host} not recognized. This might be due to bad server configuration."
