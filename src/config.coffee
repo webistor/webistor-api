@@ -11,7 +11,7 @@ module.exports =
   newHtml: '/home/node/webistor/app-new/public/'
   
   # For Content Security Policy
-  whitelist: ['localhost', 'webistor.net', 'www.webistor.net', 'new.webistor.net']
+  whitelist: ['localhost', 'webistor.lvho.st', 'lvho.st', 'webistor.net', 'www.webistor.net', 'new.webistor.net']
 
   # Database settings.
   database:
