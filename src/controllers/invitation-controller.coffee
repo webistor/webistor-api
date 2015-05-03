@@ -46,6 +46,7 @@ module.exports = class InvitationController extends Controller
       new Mail()
       .from 'Webistor <hello@webistor.net>'
       .to user
+      .bcc 'hello@webistor.net'
       .subject 'Requested invitation - already registered'
       .template 'invitations/user-already-registered', {user}
       .send()
@@ -73,6 +74,7 @@ module.exports = class InvitationController extends Controller
       new Mail()
       .from 'Webistor <hello@webistor.net>'
       .to invitation.email
+      .bcc 'hello@webistor.net'
       .subject "Requested invitation - #{invitation.status}"
       .template "invitations/user-already-#{invitation.status}", {invitation}
       .send()
@@ -88,6 +90,7 @@ module.exports = class InvitationController extends Controller
       new Mail()
       .from 'Webistor <hello@webistor.net>'
       .to invitation.email
+      .bcc 'hello@webistor.net'
       .subject "Requested invitation - confirmation"
       .template "invitations/request-confirmation", {invitation}
       .send()
