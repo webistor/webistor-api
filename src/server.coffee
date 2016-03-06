@@ -5,10 +5,11 @@ session = require 'express-session'
 MongoStore = require 'express-session-mongo'
 
 EntryController = require './controllers/entry-controller'
-FeedbackController = require './controllers/feedback-controller'
 InvitationController = require './controllers/invitation-controller'
 SessionController = require './controllers/session-controller'
 TagController = require './controllers/tag-controller'
+FeedbackController = require './controllers/feedback-controller'
+ExportController = require './controllers/export-controller'
 
 AuthFactory = require './classes/auth-factory'
 
@@ -118,6 +119,9 @@ module.exports = (config, opts) ->
 
   # Route: Set up feedback related routes.
   server.post '/feedback/contribution', server.feedbackController.getMiddleware 'contribution'
+
+  # Route: Set up export related routes.
+  server.post '/export/bookmarks', server.exportController.getMiddleware 'bookmarks'
 
   # Start listening on the server port.
   server.listen config.serverPort if config.serverPort
